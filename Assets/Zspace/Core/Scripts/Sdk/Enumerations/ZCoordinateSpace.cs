@@ -1,0 +1,16 @@
+﻿////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2007-2020 zSpace, Inc.  All Rights Reserved.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+namespace zSpace.Core.Sdk
+{
+    public enum ZCoordinateSpace
+    {
+        Tracker = 0,
+        Display = 1,
+        Viewport = 2,
+        Camera = 3,
+    }
+}

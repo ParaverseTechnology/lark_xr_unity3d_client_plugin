@@ -1,0 +1,42 @@
+=============== 
+Unity generated
+===============
+Temp/
+Library/
+*.unitypackage
+*.apk
+*.meta
+=====================================
+Visual Studio / MonoDevelop generated
+=====================================
+ExportedObj/
+obj/
+*.svd
+*.userprefs
+/*.csproj
+*.pidb
+*.suo
+/*.sln
+*.user
+*.unityproj
+*.booproj
+1/
+.vs
+============
+OS generated
+============
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+output
+/out_zspace
+*.exe
+*.zip
+/xr_plugin_log
+/larkxr_plugin
+/ouput_android
+/ouput2
