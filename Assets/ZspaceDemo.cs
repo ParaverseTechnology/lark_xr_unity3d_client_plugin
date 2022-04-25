@@ -38,8 +38,7 @@ public class ZspaceDemo : MonoBehaviour
         closeButton.gameObject.SetActive(false);
 
         // 初始化 SDK ID 
-        // 初始化 SDK ID 
-        string sdkID = "你的SDKID。如果没有SDKID请联系商务获取";
+        string sdkID = "初始化 SDK ID";
         if (!XRApi.InitSdkAuthorization(sdkID))
         {
             int errCode = XRApi.GetLastError();
@@ -54,6 +53,7 @@ public class ZspaceDemo : MonoBehaviour
         XRManager.Instance.RenderManger.onClose += OnClose;
         XRManager.Instance.RenderManger.onConnected += OnConnect;
         XRManager.Instance.RenderManger.onTexture2DStereo += OnRenderTextureStereo;
+        XRManager.Instance.RenderManger.onTexture2D += OnTexture2D;
 
         /*        ZDisplay display = ZProvider.Context.DisplayManager.GetDisplay(ZDisplayType.zSpace);
 
@@ -70,6 +70,10 @@ public class ZspaceDemo : MonoBehaviour
                 display.GetAttribute(ZDisplayAttribute.SerialNumber);
 
                 Debug.Log("Serial Number: " + zSpaceSystemSerialNumber);*/
+
+
+        // 是否输出左右眼在同一张纹理上面
+        XRApi.SetUseMultiview(false);
 
         stylus = GameObject.FindObjectOfType<ZStylus>();
         Debug.Assert(stylus != null);
@@ -177,6 +181,18 @@ public class ZspaceDemo : MonoBehaviour
         Debug.Log("===============TestRender OnRenderTextureStereo");
         leftImage.texture = textureLeft;
         rightImage.texture = textureRight;
+
+        leftImage.enabled = true;
+        rightImage.enabled = true;
+
+        closeButton.gameObject.SetActive(true);
+    }
+
+    private void OnTexture2D(Texture2D texture)
+    {
+        Debug.Log("===============TestRender OnTexture2D");
+        leftImage.texture = texture;
+        rightImage.texture = texture;
 
         leftImage.enabled = true;
         rightImage.enabled = true;

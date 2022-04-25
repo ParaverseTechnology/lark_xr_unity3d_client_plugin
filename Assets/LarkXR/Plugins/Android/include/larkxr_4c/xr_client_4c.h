@@ -128,6 +128,16 @@ void LARK_XR_API larkxr_SetServerAddr(const char* ip, int port);
 // 连接云端应用
 void LARK_XR_API larkxr_EnterAppli(const char* appliId);
 
+/**
+ * 使用 json 字符串进入应用，
+ * 云端应用 id 从应用列表接口回调处获取。
+ * json 中可添加的接口有
+ * https://www.pingxingyun.com/online/api3_2.html?id=532
+ * 1.2.2 进入应用接口
+ * @param jsonStr
+ */
+void LARK_XR_API larkxr_EnterAppliWithJsonString(const char* jsonStr);
+
 // 关闭云端应用
 void LARK_XR_API larkxr_Close();
 
@@ -340,6 +350,10 @@ float LARK_XR_API larkxr_GetResolutionScale();
 void LARK_XR_API larkxr_SetUseH265(bool use);
 bool LARK_XR_API larkxr_GetUseH265();
 
+//数据通道相关接口
+void LARK_XR_API larkxr_SendData(const char* buffer, int length);
+void LARK_XR_API larkxr_SendString(const char* buffer);
+void LARK_XR_API larkxr_SendAudioData(const char* buffer, int length);
 // 
 //--------------------------------------------------------------------------------------------------
 #if defined( __cplusplus )

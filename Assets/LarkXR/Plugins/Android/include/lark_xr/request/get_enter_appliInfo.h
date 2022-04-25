@@ -17,6 +17,7 @@ struct EnterAppliInfo
 	int         appPort;
 	std::string appliId;
 	std::string taskId;
+	int         appliType;
 	int         initWinSize;
 	std::string preferPubOutIp;
 	int         noOperationTimeout;
@@ -46,6 +47,8 @@ class LARK_COMMON_API GetEnterAppliInfo {
 public:
 	GetEnterAppliInfo();
 	~GetEnterAppliInfo();
+	// send json
+	bool SendJson(const std::string& jsonStr, const std::string& macAddress);
 	// send sync
 	void Send(const std::string& appliId, const std::string& macAddress);
 	// send async

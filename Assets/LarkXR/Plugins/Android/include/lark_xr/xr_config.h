@@ -120,6 +120,7 @@ public:
     // 是否启用手柄的震动反馈
     static bool use_haptics_feedback;
     // 是否将视频画面左右眼渲染到同一纹理上
+    // AR 情况下强制渲染到两个纹理上 (AppliType_PXY_AR 设置 use_multiview 将会被强制关闭)
     static bool use_multiview;
     // 是否将视频画面翻转渲染
     // 上下翻转
@@ -175,6 +176,9 @@ public:
     static void QuickConfigWithDefaulSetup(QuickConfigLevel level);
     static void QuickConfig(const QuickConfigGroup& config);
     static larkVRVideoDesc GetVideoDesc();
+
+    // use project matrix to setup fov.
+    static void SetupFovWithProjectMatrix(larkxrEye eye, float* proj);
 };
 }
 #endif //CLOUDLARKXR_XR_CONFIG_H

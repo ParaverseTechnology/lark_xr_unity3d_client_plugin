@@ -120,7 +120,13 @@ namespace LarkXR {
         {
             Debug.Log("================enerappli:" + appliId);
             //VrApplication.EnterAppli(appliId);
-            XRApi.EnterAppli(appliId);
+            // XRApi.EnterAppli(appliId);
+            // "{\"appid\": \"{0}\", \"extraParam.Test1\": \"{1}\", \"extraParam.Test2\": \"{2}\", \"extraParam.Test3\": \"{3}\"}"
+            // , "Test1", "Test2", "Test3"
+            string json = System.String.Format("{{\"appliId\": \"{0}\", \"extraParam.Test1\": \"{1}\", \"extraParam.Test2\": \"{2}\", \"extraParam.Test3\": \"{3}\"}}",
+                appliId, "Test1", "Test2", "Test3");
+            Debug.Log("================enerappli with json:" + json);
+            XRApi.EnterAppliWithJsonString(json);
         }
 
         public void OnClose()

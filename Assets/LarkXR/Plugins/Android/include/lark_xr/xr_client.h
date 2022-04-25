@@ -9,9 +9,6 @@
 #include "lark_xr/types.h"
 #include "lark_xr/xr_tracking_frame.h"
 #include "lark_xr/lk_common_types.h"
-#include "request/vr_client.h"
-#include "request/report_resource.h"
-#include "request/vrclient_heartbeat.h"
 
 #ifdef __ANDROID__
 #include <jni.h>
@@ -135,11 +132,11 @@ public:
 	/**
 	 * 请求同步玩家区域数据
 	 */
-	 virtual void OnSyncPlayerSpace(larkxrPlaySpace* playSpace) = 0;
-	 /**
-	  * 数据通道开启
-	  */
-	  virtual void OnDataChannelOpen() = 0;
+	virtual void OnSyncPlayerSpace(larkxrPlaySpace* playSpace) = 0;
+	/**
+	 * 数据通道开启
+	 */
+	virtual void OnDataChannelOpen() = 0;
     /**
     * 数据通道关闭
     */
@@ -152,6 +149,41 @@ public:
 	* 收到字符数据
 	*/
 	virtual void OnDataChannelData(const std::string& data) = 0;
+
+public:
+	virtual ~XRClientObserver() = default;
+};
+
+/**
+ * 辅助基类，忽略监听事件，根据需要添加监听
+ */
+class XRClientObserverWrap: public XRClientObserver {
+public:
+	virtual void OnSDKAuthorizationFailed(int code, const std::string& msg) override {};
+	virtual void OnConnected() override {};
+	virtual void OnClose(int code) override {};
+	virtual void OnStreamingDisconnect() override {};
+
+	virtual void OnInfo(int infoCode, const std::string& msg) override {};
+	virtual void OnError(int errCode, const std::string& msg) override {};
+
+	virtual void OnMediaReady() override {};
+	virtual void OnMediaReady(int nativeTextrure) override {};
+	virtual void OnMediaReady(int nativeTextrureLeft, int nativeTextureRight) override {};
+
+	virtual void OnTrackingFrame(std::unique_ptr<XRTrackingFrame>&& frame) override {};
+	virtual void OnTrackingFrame(const larkxrTrackingFrame& trackingFrame) override {};
+	virtual void RequestTrackingInfo() override {};
+
+	virtual void OnClientId(const std::string& clientId) override {};
+	virtual void OnHapticsFeedback(bool isLeft, uint64_t startTime, float amplitude, float duration, float frequency) override {};
+	virtual void OnSyncPlayerSpace(larkxrPlaySpace* playSpace) override {};
+
+	// data channel
+	virtual void OnDataChannelOpen() override {};
+	virtual void OnDataChannelClose() override {};
+	virtual void OnDataChannelData(const char* buffer, int length) override {};
+	virtual void OnDataChannelData(const std::string& data) override {};
 };
 
 class XRClientImp;
@@ -322,6 +354,16 @@ public:
 	 * @param appliId 云端应用id
 	 */
 	void EnterAppli(const std::string& appliId);
+
+	/**
+	 * 使用 json 字符串进入应用，
+	 * 云端应用 id 从应用列表接口回调处获取。
+	 * json 中可添加的接口有
+	 * https://www.pingxingyun.com/online/api3_2.html?id=532
+	 * 1.2.2 进入应用接口
+	 * @param jsonStr 
+	 */
+	void EnterAppliWithJsonString(const std::string& jsonStr);
 	/**
 	 * 使用手动配置进入云端应用。一般情况下不需要手动调用该接口。
 	 * @param config 完整配置。
@@ -336,6 +378,13 @@ public:
 	 * @param devicePair 设备的姿态数据信息。
 	 */
 	void SendDevicePair(const larkxrTrackingDevicePairFrame& devicePair);
+	/**
+	 *
+	 * @param rawAnchorPose
+	 * @param rawViewPose
+	 * @param rotateY
+	 */
+    void SendArDevicePose(const glm::mat4& rawAnchorPose, const glm::mat4& rawViewPose, float rotateY = 0);
 	/**
 	 * 发送上一次缓存的姿态数据
 	 */
@@ -384,6 +433,16 @@ public:
 	 * 在开启渲染队列的情况下，使用完纹理后要手动释放。
 	 */
 	void ReleaseRenderTexture();
+
+	/**
+	 * 在当前渲染渲染线程渲染 mediaready 返回的纹理。
+	 * 当应用类型为 ar 时设置 eye 类型无效。
+	 * @param eye LARKXR_EYE_LEFT 渲染左眼纹理
+	 *            LARKXR_EYE_RIGHT 渲染右眼纹理
+	 *            LARKXR_EYE_BOTH 同时渲染左右眼纹理。适用于支持 multiview 的 vr 设备
+	 *            LARKAR_EYE 渲染 ar 纹理，可不用手动设置，当前应用类型为 ar 时自动按照 ar 方式渲染
+	 */
+	bool Draw(larkxrEye eye = LARKXR_EYE_LEFT);
 
 	/**
 	 * 检测当前是否是暂停状态
@@ -445,6 +504,24 @@ public:
 	 */
 	void CloseUdp();
 
+	/**
+	 * 遮罩-》透明处 alpha 值为 1
+	 * 通道-》透明处 alpha 值为 0
+	 * @return 是否是 alpha 遮罩还是 alpha 通道
+	 */
+	bool is_ar_alpha_mask() const;
+
+	/**
+	 * 当前启动的应用的应用类型，关闭时会重置
+	 * @return
+	 */
+	AppliType appli_type() const;
+
+	/**
+	 * 当前启动应用的 task id。 关闭应用之后会关闭
+	 * @return
+	 */
+	std::string task_id() const;
 	/**
 	 * 事件码。完整的事件码参照枚举 larkEventTypes
 	 * 当有新事件发生时该值会被更新，否则将保留。

@@ -42,10 +42,10 @@ namespace LarkXR
         private System.IntPtr textureRightId = System.IntPtr.Zero;
         private System.IntPtr textureAllId = System.IntPtr.Zero;
 
-        // render texture
-        public RenderTexture RTextureLeft { get; private set; }
-        public RenderTexture RTextureRight { get; private set; }
-        public RenderTexture RTextureAll { get; private set; }
+        // public texture change to Texture2D
+        public Texture2D RTextureLeft { get { return textureLeft; } }
+        public Texture2D RTextureRight { get { return textureRight;  } }
+        public Texture2D RTextureAll { get { return textureAll;  } }
 
         public bool IsStereoTexture { get; private set; }
 
@@ -82,9 +82,9 @@ namespace LarkXR
                     textureRightId = System.IntPtr.Zero;
                     textureAllId = System.IntPtr.Zero;
 
-                    RTextureLeft = null;
-                    RTextureRight = null;
-                    RTextureAll = null;
+                    textureLeft = null;
+                    textureRight = null;
+                    textureAll = null;
 
                     onClose?.Invoke();
                     Debug.Log("Disconected");

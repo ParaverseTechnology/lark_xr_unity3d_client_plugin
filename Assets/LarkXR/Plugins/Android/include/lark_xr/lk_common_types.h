@@ -104,6 +104,29 @@ typedef enum UserType_ {
     UserType_Player = 1,
 } UserType;
 
+// 云端应用的类型
+typedef enum AppliType_ {
+	// SR(独占型)
+	AppliType_DESKTOP = 1,
+	// SR(共享型-平行云通用方案)
+    AppliType_SHARED = 2,
+	// SR(共享型-UE像素流送方案)
+    AppliType_PIXEL_STREAMING = 13,
+	// VR(SteamVR)
+    AppliType_VR = 3,
+    //不能多开
+	// SteamVR:依赖Steam)
+    AppliType_VR_STEAM = 5,
+	// VR(Nvidia)
+    AppliType_NV_VR = 6,
+	// VR(OpenXR)
+    AppliType_XR = 7,
+	// AR(PXY)
+    AppliType_PXY_AR = 9,
+	// AR(Nvidia)
+    AppliType_NV_AR = 11,
+} AppliType;
+
 // config
 typedef struct CommonConfig_ {
     bool debugTask;
@@ -114,6 +137,7 @@ typedef struct CommonConfig_ {
     // common config
     std::string taskId;
     std::string appliId;
+    AppliType appliType;
     int noOperationTimeout;
     int fps;
     int bitrateKbps;

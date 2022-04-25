@@ -543,6 +543,12 @@ namespace LarkXR
             larkxr_EnterAppli(ip);
 #endif
         }
+        public static void EnterAppliWithJsonString(string jsonStr)
+        {
+#if UNITY_ANDROID || UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
+            larkxr_EnterAppliWithJsonString(jsonStr);
+#endif
+        }
         public static void Close()
         {
             larkxr_Close();
@@ -769,6 +775,17 @@ namespace LarkXR
         // 连接云端应用
         [DllImport("lark_xr")]
         private static extern void larkxr_EnterAppli(string appId);
+
+        /**
+         * 使用 json 字符串进入应用，
+         * 云端应用 id 从应用列表接口回调处获取。
+         * json 中可添加的接口有
+         * https://www.pingxingyun.com/online/api3_2.html?id=532
+         * 1.2.2 进入应用接口
+         * @param jsonStr
+         */
+        [DllImport("lark_xr")]
+        private static extern void larkxr_EnterAppliWithJsonString(string jsonStr);
 
         // 关闭云端应用
         [DllImport("lark_xr")]

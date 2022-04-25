@@ -35,7 +35,7 @@ public class DemoRender : MonoBehaviour
         closeButton.gameObject.SetActive(false);
 
         // 初始化 SDK ID 
-        string sdkID = "你的SDKID。如果没有SDKID请联系商务获取";
+        string sdkID = "初始化 SDK ID ";
 
         if (!XRApi.InitSdkAuthorization(sdkID)) {
             int errCode = XRApi.GetLastError();
