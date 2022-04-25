@@ -10,6 +10,8 @@ public class DemoRender : MonoBehaviour
     public float sensitivetyMouseWheel = 10f;
 
     public GameObject hmd;
+    public GameObject controllerLeft;
+    public GameObject controllerRight;
     public RawImage renderLeft;
     public RawImage renderRight;
     public RawImage renderAll;
@@ -20,6 +22,8 @@ public class DemoRender : MonoBehaviour
     void Start()
     {
         Debug.Assert(hmd != null);
+        Debug.Assert(controllerLeft != null);
+        Debug.Assert(controllerRight != null);
 
         renderAll.enabled = false;
         Debug.Assert(renderAll != null);
@@ -35,7 +39,7 @@ public class DemoRender : MonoBehaviour
         closeButton.gameObject.SetActive(false);
 
         // 初始化 SDK ID 
-        string sdkID = "初始化 SDK ID ";
+        string sdkID = "824b87774eff49d68467e3a3530169e2";
 
         if (!XRApi.InitSdkAuthorization(sdkID)) {
             int errCode = XRApi.GetLastError();
@@ -108,9 +112,38 @@ public class DemoRender : MonoBehaviour
         {
             return;
         }
+
+        // unity坐标系转换为 openvr坐标系
         OpenVrPose openVrPose = new OpenVrPose(hmd.transform);
+        // 模拟房间高度设置
         openVrPose.Position.y += LarkXR.Config.GetExtraHeight();
+        // 设置头盔位置和旋转
         XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_HMD, openVrPose.Position, openVrPose.Rotation);
+
+        // 左手手柄
+        XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_Controller_Left, controllerLeft.transform);
+        XRApi.ControllerInputStateNative controllerInputStateNativeLeft = new XRApi.ControllerInputStateNative();
+        controllerInputStateNativeLeft.deviceType = XRApi.DeviceType.Device_Type_Controller_Left;
+        controllerInputStateNativeLeft.isConnected = true;
+        controllerInputStateNativeLeft.triggerValue = 0.0f;
+        controllerInputStateNativeLeft.gripValue = 0.0f;
+        controllerInputStateNativeLeft.batteryPercentRemaining = 0;
+        // controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_A_Click);
+        // controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_X_Click);
+        XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Left, controllerInputStateNativeLeft);
+
+        // 右手手柄
+        XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_Controller_Right, controllerRight.transform);
+        XRApi.ControllerInputStateNative controllerInputStateNativeRight = new XRApi.ControllerInputStateNative();
+        controllerInputStateNativeRight.deviceType = XRApi.DeviceType.Device_Type_Controller_Left;
+        controllerInputStateNativeRight.isConnected = true;
+        controllerInputStateNativeRight.triggerValue = 0.0f;
+        controllerInputStateNativeRight.gripValue = 0.0f;
+        controllerInputStateNativeRight.batteryPercentRemaining = 0;
+        // controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_A_Click);
+        // controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_X_Click);
+        XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Left, controllerInputStateNativeRight);
+
         //XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_HMD, mainCamera.transform.position, mainCamera.transform.rotation);
         //XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_Controller_Left, testPosition, testRotation);
         //XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_Controller_Right, testPosition, testRotation);
@@ -118,6 +151,8 @@ public class DemoRender : MonoBehaviour
         //XRApi.ControllerInputState controllerInputState = new XRApi.ControllerInputState();
         //XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Left, controllerInputState);
         //XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Right, controllerInputState);
+
+
         // send deivce pair info to server.
         XRApi.SendDeivcePair();
     }

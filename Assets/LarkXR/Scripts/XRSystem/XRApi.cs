@@ -361,6 +361,12 @@ namespace LarkXR
             public float saturation;                // 饱和度:范围[-1; 1],默认值为0。-1为黑白
             public float gamma;                     // 伽玛:范围[0; 5],默认值为1。使用值2.2校正从sRGB到RGB空间的颜色
             public float sharpening;                // 锐化:范围[-1; 5],默认为0。-1是最模糊的,5是最锐利的
+
+            public override string ToString()
+            {
+                return String.Format("enableColorCorrection={0}; brightness={1}; contrast={2}; saturation={3}; gamma={4}; sharpening={5}",
+                    enableColorCorrection, brightness, contrast, saturation, gamma, sharpening);
+            }
         }
 
         //
@@ -373,6 +379,12 @@ namespace LarkXR
             public float foveationStrength;          //渲染强度          [0.5-10.0]          默认 2 值越高,意味着朝向帧边缘的细节越少,伪像越多
             public float foveationShape;             //渲染形状          [0.2-2.0]           默认 1.5  集中渲染的形状
             public float foveationVerticalOffset;    //渲染垂直偏移      [-0.05-0.05]        默认 0  较高的值表示高质量的帧区域进一步向下移动
+
+            public override string ToString()
+            {
+                return String.Format("enableFoveateRendering={0}; foveationStrength={1}; foveationShape={2}; foveationVerticalOffset={3}",
+                    enableFoveateRendering, foveationStrength, foveationShape, foveationVerticalOffset);
+            }
         }
 
         //
@@ -394,6 +406,12 @@ namespace LarkXR
             public bool forece3dof; //强制3dof 如oculus go
             public float controllerposeTimeOffset;//正常:0.01 中速:-0.03 快速:-1 控制器追踪速度"像需要快速运动的游戏比如《光剑》，选择中速或快速。 运动比较慢的游戏比如《Skyrim》，使用正常即可。",
             public float hapticsIntensity;//控制器触动反馈0-5
+
+            public override string ToString()
+            {
+                return String.Format("type={0}; forece3dof={1}; controllerposeTimeOffset={2}; hapticsIntensity={3}",
+                    type, forece3dof, controllerposeTimeOffset, hapticsIntensity);
+            }
         }
 
         // quick setup level.
@@ -601,6 +619,11 @@ namespace LarkXR
         {
             larkxr_UpdateDevicePose(device, ref pose);
         }
+        public static void UpdateDevicePose(DeviceType device, Transform transform) {
+            OpenVrPose openVrPose = new OpenVrPose(transform);
+            UpdateDevicePose(device, openVrPose.Position, openVrPose.Rotation);
+        }
+
         public static void UpdateDevicePose(DeviceType device, Vector3 position, Quaternion rotation)
         {
             larkxr_UpdateDevicePose2(device, position.x, position.y, position.z, rotation.x, rotation.y, rotation.z, rotation.w);
@@ -800,6 +823,22 @@ namespace LarkXR
 		public static bool GetUseH265() {
 			return larkxr_GetUseH265();
 		}
+
+        /**
+         * 通过数据通道发送字节数据
+         */
+        public static void SendData(byte[] buffer)
+        {
+            larkxr_SendData(ref buffer[0], buffer.Length);
+        }
+        public static void SendText(string text)
+        {
+            larkxr_SendString(text);
+        }
+        public static void SendVoiceData(byte[] buffer)
+        {
+            larkxr_SendAudioData(ref buffer[0], buffer.Length);
+        }
         #endregion
 
         #region IssuePluginEvent
@@ -1082,11 +1121,11 @@ namespace LarkXR
         #region datachannels
         //数据通道相关接口
         [DllImport("lark_xr")]
-        private static extern void larkxr_SendData(IntPtr buffer, int length);
+        private static extern void larkxr_SendData(ref byte data, int length);
         [DllImport("lark_xr")]
         private static extern void larkxr_SendString(string txt);
         [DllImport("lark_xr")]
-        private static extern void larkxr_SendAudioData(IntPtr buffer, int length);
+        private static extern void larkxr_SendAudioData(ref byte data, int length);
         #endregion
 
         #region render callback
