@@ -141,6 +141,8 @@ namespace LarkXR
             Intensity_Strong = 4,   /**< The Intensity of vibrate is Strong. */
             Intensity_Severe = 5,   /**< The Intensity of vibrate is Severe. */
         }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         public struct TrackedPose
         {
             public DeviceType device;
@@ -158,6 +160,81 @@ namespace LarkXR
             public Vector3 acceleration;
             public Vector3 angularAcceleration;
         }
+
+        // C flags
+        [Flags]
+        public enum InputButtonFlag
+        {
+            larkxr_Input_System_Click = 0,
+            larkxr_Input_Application_Menu_Click,
+            larkxr_Input_Grip_Click,
+            larkxr_Input_Grip_Value,
+            larkxr_Input_Grip_Touch,
+            larkxr_Input_DPad_Left_Click,
+            larkxr_Input_DPad_Up_click,
+            larkxr_Input_DPad_Right_Click,
+            larkxr_Input_DPad_Down_Click,
+            larkxr_Input_A_Click,
+            larkxr_Input_A_Touch,
+            larkxr_Input_B_Click,
+            larkxr_Input_B_Touch,
+            larkxr_Input_X_Click,
+            larkxr_Input_X_Touch,
+            larkxr_Input_Y_Click,
+            larkxr_Input_Y_Touch,
+            larkxr_Input_Trigger_Left_Value,
+            larkxr_Input_Trigger_Right_Value,
+            larkxr_Input_Shoulder_Left_Click,
+            larkxr_Input_Shoulder_Right_Click,
+            larkxr_Input_Joystick_Left_Click,
+            larkxr_Input_Joystick_Left_X,
+            larkxr_Input_Joystick_Left_Y,
+            larkxr_Input_Joystick_Right_Click,
+            larkxr_Input_Joystick_Right_X,
+            larkxr_Input_Joystick_Right_Y,
+            larkxr_Input_Joystick_Click,
+            larkxr_Input_Joystick_X,
+            larkxr_Input_Joystick_Y,
+            larkxr_Input_Joystick_Touch,
+            larkxr_Input_Back_Click,
+            larkxr_Input_Guide_Click,
+            larkxr_Input_Start_Click,
+            larkxr_Input_Trigger_Click,
+            larkxr_Input_Trigger_Value,
+            larkxr_Input_Trigger_Touch,
+            larkxr_Input_Trackpad_X,
+            larkxr_Input_Trackpad_Y,
+            larkxr_Input_Trackpad_Click,
+            larkxr_Input_Trackpad_Touch,
+
+            larkxr_Input_MAX = larkxr_Input_Trackpad_Touch,
+            larkxr_Input_COUNT = larkxr_Input_MAX + 1
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
+        public struct ControllerInputStateNative
+        {
+            public DeviceType deviceType;
+            public bool isConnected;
+            public UInt64 buttons;
+            /// d          ! y = 1
+            /// d          |
+            /// d          |
+            /// d  --------|--------> x 1
+            /// d          |
+            /// d          | -1
+            /// d        openvr
+            public Vector2 touchPadAxis;
+            public float triggerValue; // trigger axis 0 - 1.0f
+            public float gripValue;
+            public uint batteryPercentRemaining;
+
+            public void AddButtonState(InputButtonFlag flag)
+            {
+                buttons |= (UInt64)GetLarkXRButtonFlag(flag);
+            }
+        }
+        // htc 类型手柄
         public struct ControllerInputState
         {
             public DeviceType deviceType;
@@ -172,7 +249,7 @@ namespace LarkXR
             public bool volumDownPressed;
             public bool touchPadTouched;
             // trigger axis 0 - 1.0f
-            public Vector2 triggerAxis;
+            public float triggerAxis;
             /// d          ! x = -1
             /// d          |
             /// d          |
@@ -187,7 +264,7 @@ namespace LarkXR
         {
             public DeviceType deviceType;
             public TrackedPose pose;
-            public ControllerInputState inputState;
+            public ControllerInputStateNative inputState;
         }
 
         // 设备电量
@@ -275,7 +352,7 @@ namespace LarkXR
         //
         // 颜色校正
         // 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         public struct ColorCorrention
         {
             public bool enableColorCorrection;      // true的时候 其他参数启用(默认为false)
@@ -289,7 +366,7 @@ namespace LarkXR
         //
         // Fov 渲染
         // 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         public struct FoveatedRendering
         {
             public bool enableFoveateRendering;      //true的时候 其他参数启用(默认为true)
@@ -310,7 +387,7 @@ namespace LarkXR
             larkHeadSetType_NOLO_Sonic_1 = 4,
         };
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         public struct HeadSetControllerDesc
         {
             public HeadSetType type;
@@ -328,6 +405,15 @@ namespace LarkXR
             QuickConfigLevel_Normal = 3,
             QuickConfigLevel_Extreme = 4,
         }
+        #endregion
+
+        #region input healper
+        // get larkxr button flag
+        public static UInt64 GetLarkXRButtonFlag(InputButtonFlag flag)
+        {
+            return 1UL << (int)flag;
+        }
+
         #endregion
 
         #region system info api
@@ -511,13 +597,21 @@ namespace LarkXR
             larkxr_LatencyCollectorrSubmit(trackingFrame.frameIndex, 0);
         }
         // devices apis
+        public static void UpdateDevicePose(DeviceType device, TrackedPose pose)
+        {
+            larkxr_UpdateDevicePose(device, ref pose);
+        }
         public static void UpdateDevicePose(DeviceType device, Vector3 position, Quaternion rotation)
         {
             larkxr_UpdateDevicePose2(device, position.x, position.y, position.z, rotation.x, rotation.y, rotation.z, rotation.w);
         }
+        public static void UpdateControllerInput(ControllerType controllerType, ControllerInputStateNative inputState)
+        {
+            larkxr_UpdateControllerInputState(controllerType, ref inputState);
+        }
         public static void UpdateControllerInput(ControllerType controllerType, ControllerInputState inputState)
         {
-            larkxr_UpdateControllerInput2((DeviceType)controllerType, inputState.isConnected, inputState.triggerPressed, inputState.triggerPressed, inputState.digitTriggerPressed,
+            larkxr_UpdateControllerInput2(controllerType, inputState.isConnected, inputState.triggerPressed, inputState.triggerPressed, inputState.digitTriggerPressed,
                 inputState.appMenuPressed, inputState.homePressed, inputState.gripPressed, inputState.volumUpPressed, inputState.volumDownPressed, inputState.touchPadTouched);
         }
         // send deivce pari to cloud.
@@ -622,22 +716,30 @@ namespace LarkXR
             larkxr_SetFoveatedRendering(ref foveatedRendering);
         }
         public static FoveatedRendering GetFoveatedRendering() {
-            return larkxr_GetFoveatedRendering();
+            FoveatedRendering foveatedRendering = new FoveatedRendering();
+            larkxr_GetFoveatedRendering(ref foveatedRendering);
+            return foveatedRendering;
         }
         public static FoveatedRendering GetDefaultFoveatedRendering() {
-            return larkxr_GetDefaultFoveatedRendering();
+            FoveatedRendering foveatedRendering = new FoveatedRendering();
+            larkxr_GetDefaultFoveatedRendering(ref foveatedRendering);
+            return foveatedRendering;
         }
 
         public static void SetColorCorrention(ColorCorrention colorCorrection) {
             larkxr_SetColorCorrention(ref colorCorrection);
         }
 
-        public static ColorCorrention GetColorCorrention() { 
-            return larkxr_GetColorCorrention();
+        public static ColorCorrention GetColorCorrention() {
+            ColorCorrention colorCorrention = new ColorCorrention();
+            larkxr_GetColorCorrention(ref colorCorrention);
+            return colorCorrention;
         }
 
         public static ColorCorrention GetDefaultColorCorrention() {
-            return larkxr_GetDefaultColorCorrention();
+            ColorCorrention colorCorrention = new ColorCorrention();
+            larkxr_GetDefaultColorCorrention(ref colorCorrention);
+            return colorCorrention;
         }
 
         public static void SetUseMultiview(bool use) {
@@ -654,11 +756,15 @@ namespace LarkXR
         }
         public static HeadSetControllerDesc GetHeadSetControllerDesc()
         {
-            return lakrxr_GetHeadSetControllerDesc();
+            HeadSetControllerDesc headSetControllerDesc = new HeadSetControllerDesc();
+            lakrxr_GetHeadSetControllerDesc(ref headSetControllerDesc);
+            return headSetControllerDesc;
         }
         public static HeadSetControllerDesc GetDefaultHeadSetControllerDesc()
         {
-            return lakrxr_GetDefaultHeadSetControllerDesc();
+            HeadSetControllerDesc headSetControllerDesc = new HeadSetControllerDesc();
+            lakrxr_GetDefaultHeadSetControllerDesc(ref headSetControllerDesc);
+            return headSetControllerDesc;
         }
 
         public static void QuickConfigWithDefaulSetup(QuickConfigLevel level)
@@ -809,12 +915,20 @@ namespace LarkXR
 
         // 更新设备姿态
         [DllImport("lark_xr")]
+        private static extern void larkxr_UpdateDevicePose(DeviceType deviceType, ref TrackedPose pose);
+
+        // 更新设备姿态
+        [DllImport("lark_xr")]
         private static extern void larkxr_UpdateDevicePose2(DeviceType deviceType, float px, float py, float pz,
             float rx, float ry, float rz, float rw);
 
         // 更新手柄状态
         [DllImport("lark_xr")]
-        private static extern void larkxr_UpdateControllerInput2(DeviceType controllerType, bool isConnected,
+        private static extern void larkxr_UpdateControllerInputState(ControllerType controllerType, ref ControllerInputStateNative controllerInputState);
+
+        // 更新手柄状态
+        [DllImport("lark_xr")]
+        private static extern void larkxr_UpdateControllerInput2(ControllerType controllerType, bool isConnected,
             bool touchPadPressed, bool triggerPressed, bool digitTriggerPressed, bool appMenuPressed,
             bool homePressed, bool gripPressed, bool volumUpPressed,
             bool volumDownPressed, bool touchPadTouched);
@@ -917,17 +1031,17 @@ namespace LarkXR
         private static extern void larkxr_SetFoveatedRendering(ref FoveatedRendering fovRending);
         // get fov rendeing setup
         [DllImport("lark_xr")]
-        private static extern FoveatedRendering larkxr_GetFoveatedRendering();
+        private static extern void larkxr_GetFoveatedRendering(ref FoveatedRendering fovRending);
         [DllImport("lark_xr")]
-        private static extern FoveatedRendering larkxr_GetDefaultFoveatedRendering();
+        private static extern void larkxr_GetDefaultFoveatedRendering(ref FoveatedRendering fovRending);
 
         // setup color corretion
         [DllImport("lark_xr")]
         private static extern void larkxr_SetColorCorrention(ref ColorCorrention colorCorrection);
         [DllImport("lark_xr")]
-        private static extern ColorCorrention larkxr_GetColorCorrention();
+        private static extern void larkxr_GetColorCorrention(ref ColorCorrention colorCorrection);
         [DllImport("lark_xr")]
-        private static extern ColorCorrention larkxr_GetDefaultColorCorrention();
+        private static extern void larkxr_GetDefaultColorCorrention(ref ColorCorrention colorCorrection);
 
         // set use mutiview. stereo mode only support in android.
         [DllImport("lark_xr")]
@@ -941,10 +1055,10 @@ namespace LarkXR
         private static extern void lakrxr_SetHeadSetControllerDesc(ref HeadSetControllerDesc headset_desc);
         // get larkHeadSetControllerDesc
         [DllImport("lark_xr")]
-        private static extern HeadSetControllerDesc lakrxr_GetHeadSetControllerDesc();
+        private static extern void lakrxr_GetHeadSetControllerDesc(ref HeadSetControllerDesc headset_desc);
         // get default head set control
         [DllImport("lark_xr")]
-        private static extern HeadSetControllerDesc lakrxr_GetDefaultHeadSetControllerDesc();
+        private static extern void lakrxr_GetDefaultHeadSetControllerDesc(ref HeadSetControllerDesc headset_desc);
         // quick config with level
         [DllImport("lark_xr")]
         private static extern void  larkxr_QuickConfigWithDefaulSetup(int level);
@@ -963,6 +1077,16 @@ namespace LarkXR
 		
 		[DllImport("lark_xr")]
 		private static extern bool larkxr_GetUseH265();
+        #endregion
+
+        #region datachannels
+        //数据通道相关接口
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SendData(IntPtr buffer, int length);
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SendString(string txt);
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SendAudioData(IntPtr buffer, int length);
         #endregion
 
         #region render callback
