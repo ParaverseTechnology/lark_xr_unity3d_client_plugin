@@ -18,7 +18,16 @@ public class DemoRender : MonoBehaviour
 
     public bool UseMutiView = false;
 
-    private Button closeButton;
+    // 左上角模拟操作哪个手柄
+    private bool isLeftController = true;
+    // 手柄按钮的状态,按下或者抬起
+    private bool buttonAX = false;
+    private bool buttonBY = false;
+    private bool buttonJoyStick = false;
+    private bool buttonGrip = false;
+    private bool buttonMenu = false;
+    private bool buttonTrigger = false;
+
     void Start()
     {
         Debug.Assert(hmd != null);
@@ -33,10 +42,6 @@ public class DemoRender : MonoBehaviour
 
         renderRight.enabled = false;
         Debug.Assert(renderRight != null);
-
-        closeButton = GetComponentInChildren<Button>();
-        Debug.Assert(closeButton != null);
-        closeButton.gameObject.SetActive(false);
 
         // 初始化 SDK ID 
         string sdkID = "初始化 SDK ID ";
@@ -60,6 +65,12 @@ public class DemoRender : MonoBehaviour
         XRApi.SetRenderInfo(renderInfo);
         XRApi.SetupBitrateKbps(50 * 1000);
 
+        // 设置头盔类型为，主要会影响云端手柄的默认展示
+        var headSetControllerDesc = XRApi.GetDefaultHeadSetControllerDesc();
+        // 设置为 oculus 系列类型
+        headSetControllerDesc.type = XRApi.HeadSetType.larkHeadSetType_OCULUS;
+        XRApi.SetHeadSetControllerDesc(headSetControllerDesc);
+
         // 是否输出左右眼在同一张纹理上面
         XRApi.SetUseMultiview(UseMutiView);
 
@@ -69,7 +80,30 @@ public class DemoRender : MonoBehaviour
         // 手机常亮
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
+    private void OnGUI()
+    {
+        if (!XRApi.IsConnected())
+        {
+            return;
+        }
 
+        GUI.Box(new Rect(10, 10, 260, 150), "Input Test");
+        if (GUI.Button(new Rect(20, 40, 50, 20), "关闭")) {
+            // 关闭当前连接
+            XRManager.Instance.OnClose();
+            Debug.Log("关闭当前连接");
+        }
+
+        buttonAX = GUI.RepeatButton(new Rect(20, 70, 50, 20), "X/A");
+        buttonBY = GUI.RepeatButton(new Rect(80, 70, 50, 20), "Y/B");
+        buttonJoyStick = GUI.RepeatButton(new Rect(140, 70, 100, 20), "Joystick");
+        buttonGrip = GUI.RepeatButton(new Rect(20, 100, 50, 20), "grip");
+        buttonMenu = GUI.RepeatButton(new Rect(80, 100, 50, 20), "menu");
+        buttonTrigger = GUI.RepeatButton(new Rect(140, 100, 100, 20), "trigger");
+
+        // 是否是左手柄
+        isLeftController = GUI.Toggle(new Rect(20, 130, 380, 20), isLeftController, "左手柄");
+    }
     // Update is called once per frame
     void Update()
     {
@@ -121,37 +155,98 @@ public class DemoRender : MonoBehaviour
         XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_HMD, openVrPose.Position, openVrPose.Rotation);
 
         // 左手手柄
+        // 设置手柄的姿态
         XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_Controller_Left, controllerLeft.transform);
+        // 设置手柄按钮的状态
         XRApi.ControllerInputStateNative controllerInputStateNativeLeft = new XRApi.ControllerInputStateNative();
         controllerInputStateNativeLeft.deviceType = XRApi.DeviceType.Device_Type_Controller_Left;
         controllerInputStateNativeLeft.isConnected = true;
         controllerInputStateNativeLeft.triggerValue = 0.0f;
         controllerInputStateNativeLeft.gripValue = 0.0f;
         controllerInputStateNativeLeft.batteryPercentRemaining = 0;
-        // controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_A_Click);
-        // controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_X_Click);
+        if (isLeftController) {
+            if (buttonAX) {
+                // quest 类型手柄左手 A 键
+                controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_A_Click);
+            }
+            if (buttonBY)
+            {
+                // quest 类型手柄左手 B 键
+                controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_B_Click);
+            }
+            if (buttonJoyStick)
+            {
+                controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Joystick_Click);
+            }
+            if (buttonMenu)
+            {
+                controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Application_Menu_Click);
+            }
+            if (buttonTrigger)
+            {
+                controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trigger_Click);
+                // 按下时triggervalue设置为1
+                controllerInputStateNativeLeft.triggerValue = 1.0f;
+            }
+            if (buttonGrip)
+            {
+                controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Grip_Click);
+                // 按下时triggervalue设置为1
+                controllerInputStateNativeLeft.gripValue = 1.0f;
+            }
+        }
         XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Left, controllerInputStateNativeLeft);
 
         // 右手手柄
+        // 设置手柄的姿态
         XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_Controller_Right, controllerRight.transform);
+        // 设置手柄按钮的状态
         XRApi.ControllerInputStateNative controllerInputStateNativeRight = new XRApi.ControllerInputStateNative();
-        controllerInputStateNativeRight.deviceType = XRApi.DeviceType.Device_Type_Controller_Left;
+        controllerInputStateNativeRight.deviceType = XRApi.DeviceType.Device_Type_Controller_Right;
         controllerInputStateNativeRight.isConnected = true;
         controllerInputStateNativeRight.triggerValue = 0.0f;
         controllerInputStateNativeRight.gripValue = 0.0f;
         controllerInputStateNativeRight.batteryPercentRemaining = 0;
-        // controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_A_Click);
-        // controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_X_Click);
-        XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Left, controllerInputStateNativeRight);
+        if (!isLeftController)
+        {
+            if (buttonAX)
+            {
+                // quest 类型手柄右手 X 键
+                controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_X_Click);
+            }
+            if (buttonBY)
+            {
+                // quest 类型手柄右手 Y 键
+                controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Y_Click);
+            }
+            if (buttonJoyStick)
+            {
+                controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Joystick_Click);
+            }
+            if (buttonMenu)
+            {
+                controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Application_Menu_Click);
+            }
+            if (buttonTrigger)
+            {
+                controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trigger_Click);
+                // 按下时triggervalue设置为1
+                controllerInputStateNativeRight.triggerValue = 1.0f;
+            }
+            if (buttonGrip)
+            {
+                controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Grip_Click);
+                // 按下时triggervalue设置为1
+                controllerInputStateNativeRight.gripValue = 1.0f;
+            }
+        }
+        XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Right, controllerInputStateNativeRight);
 
-        //XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_HMD, mainCamera.transform.position, mainCamera.transform.rotation);
-        //XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_Controller_Left, testPosition, testRotation);
-        //XRApi.UpdateDevicePose(XRApi.DeviceType.Device_Type_Controller_Right, testPosition, testRotation);
-        // update device input
+
+        // HTC 类型手柄状态,兼容之前接口保留
         //XRApi.ControllerInputState controllerInputState = new XRApi.ControllerInputState();
         //XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Left, controllerInputState);
         //XRApi.UpdateControllerInput(XRApi.ControllerType.Controller_Right, controllerInputState);
-
 
         // send deivce pair info to server.
         XRApi.SendDeivcePair();
@@ -161,8 +256,6 @@ public class DemoRender : MonoBehaviour
         Debug.Log("===============TestRender OnTexture2D");
         renderAll.enabled = true;
         renderAll.texture = texture;
-        closeButton.gameObject.SetActive(true);
-
 
         // Graphics.Blit(texture, (RenderTexture)null);
 
@@ -198,7 +291,6 @@ public class DemoRender : MonoBehaviour
         renderRight.texture = textureRight;
         // new Rect(0.5f, 0, 0.5f, 1);
         // render.uvRect = new Rect(0, 0, 0.5f, 1);
-        closeButton.gameObject.SetActive(true);
     }
 
     private void OnClose()
@@ -206,14 +298,12 @@ public class DemoRender : MonoBehaviour
         renderAll.enabled = false;
         renderLeft.enabled = false;
         renderRight.enabled = false;
-        closeButton.gameObject.SetActive(false);
         hmd.transform.position = new Vector3(0, 0, 0);
         hmd.transform.rotation = new Quaternion(0, 0, 0, 1);
     }
 
     private void OnConnect()
     {
-        closeButton.gameObject.SetActive(true);
         hmd.transform.position = new Vector3(0, 0, 0);
         hmd.transform.rotation = new Quaternion(0, 0, 0, 1);
     }

@@ -115,24 +115,33 @@ namespace LarkXR {
         void Update()
         {
         }
-
+        
+        // 使用 appliid 进入应用
         public void OnEnterAppli(string appliId)
         {
             Debug.Log("================enerappli:" + appliId);
-            //VrApplication.EnterAppli(appliId);
-            // XRApi.EnterAppli(appliId);
-            // "{\"appid\": \"{0}\", \"extraParam.Test1\": \"{1}\", \"extraParam.Test2\": \"{2}\", \"extraParam.Test3\": \"{3}\"}"
-            // , "Test1", "Test2", "Test3"
-            string json = System.String.Format("{{\"appliId\": \"{0}\", \"extraParam.Test1\": \"{1}\", \"extraParam.Test2\": \"{2}\", \"extraParam.Test3\": \"{3}\"}}",
-                appliId, "Test1", "Test2", "Test3");
-            Debug.Log("================enerappli with json:" + json);
-            XRApi.EnterAppliWithJsonString(json);
+            XRApi.EnterAppli(appliId);
+            
+            // 拼接 json 字段进入应用
+            //string json = System.String.Format("{{\"appliId\": \"{0}\", \"extraParam.Test1\": \"{1}\", \"extraParam.Test2\": \"{2}\", \"extraParam.Test3\": \"{3}\"}}",
+            //    appliId, "Test1", "Test2", "Test3");
+            // Debug.Log("================enerappli with json:" + json);
+            // XRApi.EnterAppliWithJsonString(json);
+        }
+
+        // 拼接 json 字段进入应用, 必须字段为 appliId，其他字段参考
+        //  https://www.pingxingyun.com/online/api3_2.html?id=532 1.2.2 进入应用接口
+        // string json = System.String.Format("{{\"appliId\": \"{0}\", \"extraParam.Test1\": \"{1}\", \"extraParam.Test2\": \"{2}\", \"extraParam.Test3\": \"{3}\"}}",
+        //            appliId, "Test1", "Test2", "Test3");
+        // Debug.Log("================enerappli with json:" + json);
+        public void OnEnterAppliWithJsonStr(string jsonstr)
+        {
+            XRApi.EnterAppliWithJsonString(jsonstr);
         }
 
         public void OnClose()
         {
             Debug.Log("================OnClose");
-            //VrApplication.Close();
             XRApi.Close();
         }
     }
