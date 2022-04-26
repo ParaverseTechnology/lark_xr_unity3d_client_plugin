@@ -634,7 +634,7 @@ namespace LarkXR
         }
         public static void UpdateControllerInput(ControllerType controllerType, ControllerInputState inputState)
         {
-            larkxr_UpdateControllerInput2(controllerType, inputState.isConnected, inputState.triggerPressed, inputState.triggerPressed, inputState.digitTriggerPressed,
+            larkxr_UpdateControllerInput2(controllerType, inputState.isConnected, inputState.touchPadPressed, inputState.triggerPressed, inputState.digitTriggerPressed,
                 inputState.appMenuPressed, inputState.homePressed, inputState.gripPressed, inputState.volumUpPressed, inputState.volumDownPressed, inputState.touchPadTouched);
         }
         // send deivce pari to cloud.

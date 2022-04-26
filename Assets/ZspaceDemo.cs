@@ -39,7 +39,8 @@ public class ZspaceDemo : MonoBehaviour
 
         // 初始化 SDK ID 
         string sdkID = "初始化 SDK ID";
-        if (!XRApi.InitSdkAuthorization(sdkID))
+
+        if (!XRApi.InitSdkAuthorization("初始化 SDK ID"))
         {
             int errCode = XRApi.GetLastError();
             Debug.LogError("初始化云雀SDK ID 失败 code " + errCode);

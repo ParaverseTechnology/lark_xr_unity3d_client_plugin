@@ -318,9 +318,9 @@ void LARK_XR_API larkxr_GetDefaultFov2(float *eyeLeft_Left, float *eyeLeft_Right
 // set larkHeadSetControllerDesc
 void LARK_XR_API lakrxr_SetHeadSetControllerDesc(larkHeadSetControllerDesc* headset_desc);
 // get larkHeadSetControllerDesc
-larkHeadSetControllerDesc LARK_XR_API lakrxr_GetHeadSetControllerDesc();
+void LARK_XR_API lakrxr_GetHeadSetControllerDesc(larkHeadSetControllerDesc* headset_desc);
 // get default head set control
-larkHeadSetControllerDesc LARK_XR_API lakrxr_GetDefaultHeadSetControllerDesc();
+void LARK_XR_API lakrxr_GetDefaultHeadSetControllerDesc(larkHeadSetControllerDesc* headset_desc);
 
 // set use mutiview. stereo mode only support in android.
 void LARK_XR_API larkxr_SetUseMultiview(bool useMulti);
@@ -330,13 +330,13 @@ void LARK_XR_API larkxr_SetFlipDraw(bool flipDraw);
 // setup fov rendeing
 void LARK_XR_API larkxr_SetFoveatedRendering(larkFoveatedRendering* fovRending);
 // get fov rendeing setup
-larkFoveatedRendering LARK_XR_API larkxr_GetFoveatedRendering();
-larkFoveatedRendering LARK_XR_API larkxr_GetDefaultFoveatedRendering();
+void LARK_XR_API larkxr_GetFoveatedRendering(larkFoveatedRendering* fovRending);
+void LARK_XR_API larkxr_GetDefaultFoveatedRendering(larkFoveatedRendering* fovRending);
 
 // setup 
 void LARK_XR_API larkxr_SetColorCorrention(larkColorCorrention* colorCorrection);
-larkColorCorrention LARK_XR_API larkxr_GetColorCorrention();
-larkColorCorrention LARK_XR_API larkxr_GetDefaultColorCorrention();
+void LARK_XR_API larkxr_GetColorCorrention(larkColorCorrention* colorCorrection);
+void LARK_XR_API larkxr_GetDefaultColorCorrention(larkColorCorrention* colorCorrection);
 
 // quick config with level
 void LARK_XR_API larkxr_QuickConfigWithDefaulSetup(int level);
