@@ -414,6 +414,14 @@ namespace LarkXR
             }
         }
 
+        public enum StreamType
+        {
+            larkStreamType_UDP = 0,                        //普通UDP
+            larkStreamType_TCP = 1,                        //普通TCP
+            larkStreamType_THROTTLED_UDP = 2,              //调速(服务端控制)+普通UDP
+            larkStreamType_KCP = 3,
+        };
+
         // quick setup level.
         public enum QuickConfigLevel
         {
@@ -823,7 +831,22 @@ namespace LarkXR
 		public static bool GetUseH265() {
 			return larkxr_GetUseH265();
 		}
-
+        public static StreamType GetStreamType()
+        {
+            StreamType type = StreamType.larkStreamType_UDP;
+            larkxr_GetStreamType(ref type);
+            return type;
+        }
+        public static StreamType GetDefaultStreamType()
+        {
+            StreamType type = StreamType.larkStreamType_UDP;
+            larkxr_GetDefaultStreamType(ref type);
+            return type;
+        }
+        public static void SetStreamType(StreamType type)
+        {
+            larkxr_SetStreamType(type);
+        }
         /**
          * 通过数据通道发送字节数据
          */
@@ -1116,6 +1139,15 @@ namespace LarkXR
 		
 		[DllImport("lark_xr")]
 		private static extern bool larkxr_GetUseH265();
+
+        [DllImport("lark_xr")]
+        private static extern bool larkxr_GetStreamType(ref StreamType type);
+
+        [DllImport("lark_xr")]
+        private static extern bool larkxr_GetDefaultStreamType(ref StreamType type);
+
+        [DllImport("lark_xr")]
+        private static extern bool larkxr_SetStreamType(StreamType type);
         #endregion
 
         #region datachannels

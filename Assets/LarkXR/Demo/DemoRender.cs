@@ -85,6 +85,12 @@ public class DemoRender : MonoBehaviour
         // 是否输出左右眼在同一张纹理上面
         XRApi.SetUseMultiview(UseMutiView);
 
+        // 强制指定 TCP 模式，测试使用
+        XRApi.QuickConfigLevel level = XRApi.QuickConfigLevel.QuickConfigLevel_Manual;
+        XRApi.QuickConfigWithDefaulSetup(level);
+        Config.SetQuickSetupLevel((int)level);
+        XRApi.SetStreamType(XRApi.StreamType.larkStreamType_TCP);
+
         // test frame rate.
         Application.targetFrameRate = 60;
 
@@ -181,14 +187,24 @@ public class DemoRender : MonoBehaviour
             {
                 if (buttonJoyStick)
                 {
-                    controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Click);
-                    controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Touch);
+                    // controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Click);
+                    // controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Touch);
+                    // controllerInputStateNativeLeft.touchPadAxis = new Vector2(0.5f, 0.5f);
+
+                    // controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_X);
+                    // controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Y);
+
+                    // TODO why?
+                    controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Joystick_Click);
                 }
                 if (buttonTrigger)
                 {
                     controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trigger_Click);
                     // 按下时triggervalue设置为1
                     controllerInputStateNativeLeft.triggerValue = 1.0f;
+                }
+                if (buttonMenu) {
+                    controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_System_Click);
                 }
                 if (buttonGrip)
                 {
@@ -224,6 +240,9 @@ public class DemoRender : MonoBehaviour
                 if (buttonJoyStick)
                 {
                     controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Joystick_Click);
+                    controllerInputStateNativeLeft.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Joystick_Touch);
+                    controllerInputStateNativeLeft.touchPadAxis.y = 1.0f;
+                    controllerInputStateNativeLeft.touchPadAxis.x = 0.0f;
                 }
                 if (buttonMenu)
                 {
@@ -263,14 +282,20 @@ public class DemoRender : MonoBehaviour
             {
                 if (buttonJoyStick)
                 {
-                    controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Click);
-                    controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Touch);
+                    // controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Click);
+                    // controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trackpad_Touch);
+
+                    controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Joystick_Click);
                 }
                 if (buttonTrigger)
                 {
                     controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Trigger_Click);
                     // 按下时triggervalue设置为1
                     controllerInputStateNativeRight.triggerValue = 1.0f;
+                }
+                if (buttonMenu)
+                {
+                    controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Application_Menu_Click);
                 }
                 if (buttonGrip)
                 {
@@ -306,6 +331,9 @@ public class DemoRender : MonoBehaviour
                 if (buttonJoyStick)
                 {
                     controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Joystick_Click);
+                    controllerInputStateNativeRight.AddButtonState(XRApi.InputButtonFlag.larkxr_Input_Joystick_Touch);
+                    controllerInputStateNativeRight.touchPadAxis.y = 1.0f;
+                    controllerInputStateNativeRight.touchPadAxis.x = 0.0f;
                 }
                 if (buttonMenu)
                 {
