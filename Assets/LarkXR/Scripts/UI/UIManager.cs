@@ -153,7 +153,7 @@ namespace LarkXR {
         #endregion
 
         #region task manager callabck
-        public void OnApplistSuccess(List<GetAppliList.StartAppInfo> startAppInfo)
+        public void OnApplistSuccess(GetAppliList.Page startAppInfo)
         {
             // Debug.Log("OnApplistSuccess:" + startAppInfo.Count + ";");
             appListContariner?.SetData(startAppInfo);

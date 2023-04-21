@@ -7,7 +7,7 @@ namespace LarkXR
     public class TaskManager : MonoBehaviour
     {
         // call backs
-        public delegate void OnApplistSuccess(List<GetAppliList.StartAppInfo> startAppInfo);
+        public delegate void OnApplistSuccess(GetAppliList.Page startAppInfo);
         public delegate void OnApplistFailed(string msg);
 
         public delegate void OnReportResourceSuccess();
@@ -82,6 +82,23 @@ namespace LarkXR
             StartCoroutine(Task());
         }
 
+        public void NextPage()
+        {
+            if (getAppliList != null && getAppliList.CurrentPage != null && getAppliList.CurrentPage.hasNextPage) {
+                getAppliList.PageNum = getAppliList.CurrentPage.nextPage;
+                StartCoroutine(GetAppliListTask());
+            }
+        }
+
+        public void PrePage()
+        {
+            if (getAppliList != null && getAppliList.CurrentPage != null && getAppliList.CurrentPage.hasPreviousPage)
+            {
+                getAppliList.PageNum = getAppliList.CurrentPage.prePage;
+                StartCoroutine(GetAppliListTask());
+            }
+        }
+
         IEnumerator Task()
         {
             while (taskStarted)
@@ -112,7 +129,7 @@ namespace LarkXR
                 if (!getAppliList.IsError)
                 {
                     // Debug.Log("applist success:" + getAppliList.List.Count);
-                    onApplistSuccess?.Invoke(getAppliList.List);
+                    onApplistSuccess?.Invoke(getAppliList.CurrentPage);
                 } else
                 {
                     Debug.Log("get applist failed:" + getAppliList.Error);
@@ -150,7 +167,7 @@ namespace LarkXR
             }
         }
 
-        void OnAndroidAppListSuccess(List<GetAppliList.StartAppInfo> startAppInfo)
+        void OnAndroidAppListSuccess(GetAppliList.Page startAppInfo)
         {
             if (onApplistSuccess != null)
                 onApplistSuccess(startAppInfo);

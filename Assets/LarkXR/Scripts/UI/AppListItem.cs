@@ -40,6 +40,7 @@ namespace LarkXR
 
         void OnEnter()
         {
+            Debug.Log("enter " + startAppInfo.appliId);
             if (startAppInfo == null) return;
             onEnterApp?.Invoke(startAppInfo.appliId);
         }

@@ -516,6 +516,15 @@ namespace LarkXR
 #endif
             return false;
         }
+
+        public static void SetCertificate(string appKey, string appSecret)
+        {
+#if UNITY_ANDROID || UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
+            larkxr_SetCertificate(appKey, appSecret); 
+#endif
+        }
+
+
         public static int GetLastError()
         {
 #if UNITY_ANDROID || UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
@@ -878,8 +887,12 @@ namespace LarkXR
         // 初始化 SDK ID
         [DllImport("lark_xr")]
         private static extern bool larkxr_InitSdkAuthorization(string sdkid);
+        // 废弃接口，使用 larkxr_InitSdkAuthorization
         [DllImport("lark_xr")]
         private static extern bool larkxr_InitSdkAuthorizationWithSecret(string sdkid, string secret);
+        // 设置接入凭证 
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SetCertificate(string sdkid, string secret);
         // 获取错误码
         [DllImport("lark_xr")]
         private static extern int larkxr_GetLastError();

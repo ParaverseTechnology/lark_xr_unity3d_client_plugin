@@ -38,13 +38,16 @@ public class ZspaceDemo : MonoBehaviour
         closeButton.gameObject.SetActive(false);
 
         // 初始化 SDK ID 
-        string sdkID = "初始化 SDK ID";
+        string sdkID = "Your SDK ID";
 
-        if (!XRApi.InitSdkAuthorization("初始化 SDK ID")) 
+        if (!XRApi.InitSdkAuthorization(sdkID))
         {
             int errCode = XRApi.GetLastError();
             Debug.LogError("初始化云雀SDK ID 失败 code " + errCode);
         }
+
+        // 从本地文件中读取客户端访问凭证。
+        XRManager.Instance.LoadCertificateFromFile();
 
         // 设置头盔类型
         XRApi.HeadSetControllerDesc headSetControllerDesc = XRApi.GetDefaultHeadSetControllerDesc();

@@ -18,8 +18,6 @@ namespace LarkXR{
         const int ITEM_LENGTH = 8;
         //XRManager vrManager;
         AppListItem[] items = new AppListItem[ITEM_LENGTH];
-        int page = 0;
-        int totalPage = 0;
 
         void Awake()
         {
@@ -69,25 +67,22 @@ namespace LarkXR{
             //}
         }
 
-        public void SetData(List<GetAppliList.StartAppInfo> data)
+        public void SetData(GetAppliList.Page data)
         {
             if (data == null)
             {
                 ClearList();
                 return;
             }
-            if (data.Count != totalPage)
-            {
-                totalPage = data.Count;
-                SetPageButton();
-            }
+
+            SetPageButton(data);
 
             for (var i = 0; i < ITEM_LENGTH; i++)
             {
                 var child = items[i];
-                if (page * ITEM_LENGTH + i < data.Count)
+                if (i < data.records.Count)
                 {
-                    child.SetData(data[page * ITEM_LENGTH + i]);
+                    child.SetData(data.records[i]);
                     child.gameObject.SetActive(true);
                 }
                 else
@@ -128,37 +123,30 @@ namespace LarkXR{
 
         void OnNextPage()
         {
-            if (page < totalPage)
-            {
-                page++;
-                SetPageButton();
-            }
+            XRManager.Instance.TaskManager.NextPage();
         }
 
         void OnPrePage()
         {
-            if (page > 0) {
-                page--;
-                SetPageButton();
-            }
+            XRManager.Instance.TaskManager.PrePage();
         }
 
-        void SetPageButton()
+        void SetPageButton(GetAppliList.Page page)
         {
             // update page button
-            if (totalPage < ITEM_LENGTH)
+            if (!page.hasNextPage && !page.hasPreviousPage)
             {
                 SetPageButton(PageType.NONE);
             }
-            else if (page > 0 && (page + 1) * ITEM_LENGTH < totalPage)
+            else if (page.hasNextPage && page.hasPreviousPage)
             {
                 SetPageButton(PageType.BOTH);
             }
-            else if (page > 0 && (page + 1) * ITEM_LENGTH > totalPage)
+            else if (page.hasPreviousPage)
             {
                 SetPageButton(PageType.PRE);
             }
-            else
+            else if (page.hasNextPage)
             {
                 SetPageButton(PageType.NEXT);
             }

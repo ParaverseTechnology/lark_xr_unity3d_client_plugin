@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -8,6 +11,40 @@ namespace LarkXR
 {
     public class ApiBase<ResultType>
     {
+
+        public static string APP_KEY { 
+            get;
+            private set;
+        }
+
+
+        public static bool IS_APP_KEY_EMPTY
+        {
+            get
+            {
+                return APP_KEY == null || APP_KEY == "";
+            }
+        }
+
+        public static string APP_SECRET {
+            get;
+            private set;
+        }
+
+        public static bool IS_APP_SECRET_EMPTY
+        {
+            get
+            {
+                return APP_SECRET == null || APP_SECRET == "";
+            }
+        }
+
+        public static void SetCertificate(string appKey, string appSecret)
+        {
+            APP_KEY = appKey;
+            APP_SECRET = appSecret;
+        }
+
         public static UriBuilder CopyUriBuilder(UriBuilder builder)
         {
             UriBuilder res = new UriBuilder();
@@ -149,7 +186,7 @@ namespace LarkXR
                 else
                 {
                     // Show results as text
-                    //Debug.Log("============ get text success" + www.downloadHandler.text);
+                    // Debug.Log("============ get text success" + www.downloadHandler.text);
                     try
                     {
                         apiResponse = ApiResponse<ResultType>.ParseApiResponse(www.downloadHandler.text);
