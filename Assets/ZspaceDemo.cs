@@ -47,7 +47,9 @@ public class ZspaceDemo : MonoBehaviour
         }
 
         // 从本地文件中读取客户端访问凭证。
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
         XRManager.Instance.LoadCertificateFromFile();
+#endif
 
         // 设置头盔类型
         XRApi.HeadSetControllerDesc headSetControllerDesc = XRApi.GetDefaultHeadSetControllerDesc();
