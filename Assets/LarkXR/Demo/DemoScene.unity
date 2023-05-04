@@ -1011,7 +1011,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nameText: {fileID: 1790122872}
-  numberText: {fileID: 1090060255}
   enterButton: {fileID: 852428139}
 --- !u!65 &217820988
 BoxCollider:
@@ -4647,7 +4646,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1090060254
 RectTransform:
   m_ObjectHideFlags: 0

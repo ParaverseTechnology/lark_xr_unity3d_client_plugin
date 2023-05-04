@@ -46,6 +46,14 @@ public class ZspaceDemo : MonoBehaviour
             Debug.LogError("初始化云雀SDK ID 失败 code " + errCode);
         }
 
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
+        // 设置 log 文件
+        // XRApi.EnableDebugMode(true, System.Environment.CurrentDirectory + "/test.log");
+#elif UNITY_ANDROID
+        // 启用 android log
+        XRApi.EnableDebugMode(true, "");
+#endif
+
         // 从本地文件中读取客户端访问凭证。
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
         XRManager.Instance.LoadCertificateFromFile();

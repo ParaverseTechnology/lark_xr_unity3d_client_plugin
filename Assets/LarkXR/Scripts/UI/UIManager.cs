@@ -70,6 +70,12 @@ namespace LarkXR {
             extraHeight.value = Config.GetExtraHeight();
             extraHeight.onValueChanged.AddListener(onExtraHeighChange);
 
+            // native callback
+            XRManager.Instance.XRApi.onConnected += OnConnected;
+            XRManager.Instance.XRApi.onClose += OnClose;
+            XRManager.Instance.XRApi.onInfo += OnInfo;
+            XRManager.Instance.XRApi.onError += OnError;
+
             XRManager.Instance.TaskManager.onApplistSuccess += OnApplistSuccess;
             XRManager.Instance.TaskManager.onApplistFailed += OnApplistFailed;
             XRManager.Instance.RenderManger.onTexture2D += OnStartCloudRender;
@@ -107,10 +113,10 @@ namespace LarkXR {
                 toastTime = -1;
                 ClearToast();
             }
-            if (XRApi.GetLastError() != 0) {
+/*            if (XRApi.GetLastError() != 0) {
                 ToastError("出现错误 code: " + XRApi.GetLastError());
                 XRApi.ClearError();
-            }
+            }*/
         }
 
 
@@ -294,6 +300,29 @@ namespace LarkXR {
             Config.SetRenderWidth(renderWidth);
             Config.SetRenderHeight(renderHeight);
         }
+        #endregion
+
+        #region xrapi callback
+        public void OnConnected()
+        {
+            Debug.Log("OnConnected");
+        }
+        public void OnClose(int code)
+        {
+            Debug.Log("OnClose" + code);
+        }
+        public void OnInfo(int code, string msg)
+        {
+            Debug.Log("OnInfo" + code + " msg : " + msg);
+            ToastInfo("[INFO]" + msg);
+        }
+        public void OnError(int code, string msg)
+        {
+            Debug.LogWarning("OnError" + code + " msg : " + msg);
+
+            ToastError("出现错误 code: " + code + " msg: " + msg);
+        }
+
         #endregion
     }
 }

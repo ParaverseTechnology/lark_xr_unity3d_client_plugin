@@ -11,7 +11,8 @@ namespace LarkXR
         public delegate void OnEnterApp(string appliId);
 
         public Text nameText;
-        public Text numberText;
+        // public Text numberText;
+
         public Button enterButton;
         public OnEnterApp onEnterApp;
         private GetAppliList.StartAppInfo startAppInfo;
@@ -31,9 +32,13 @@ namespace LarkXR
         public void SetData(GetAppliList.StartAppInfo startAppInfo)
         {
             if (startAppInfo == null) return;
-            if (startAppInfo.Equals(this.startAppInfo)) return;
+            if (startAppInfo.Equals(this.startAppInfo)) {
+                // Debug.Log("not chagne " + startAppInfo.runCnt + " " + startAppInfo.appliName + " " + startAppInfo.instanceMax);
+                return;
+            }
+
             nameText.text = startAppInfo.appliName;
-            numberText.text = startAppInfo.runCnt + "/" + startAppInfo.instanceMax;
+            // numberText.text = startAppInfo.runCnt + "/" + startAppInfo.instanceMax;
 
             this.startAppInfo = startAppInfo;
         }

@@ -29,6 +29,12 @@ namespace LarkXR {
             }
         }
 
+        public XRApi XRApi
+        {
+            get;
+            private set;
+        }
+
         public TaskManager TaskManager
         {
             get;
@@ -51,6 +57,14 @@ namespace LarkXR {
 
         private void Awake()
         {
+            XRApi = GetComponent<XRApi>();
+
+            if (XRApi == null)
+            {
+                XRApi = gameObject.AddComponent<XRApi>();
+            }
+            Debug.Assert(XRApi != null);
+
             TaskManager = GetComponent<TaskManager>();
             if (TaskManager == null)
             {
@@ -97,6 +111,8 @@ namespace LarkXR {
         void Start()
         {
             TaskManager.StartTask();
+            // RegisterCallbacks after native inited.
+            this.XRApi.RegisterCallbacks();
         }
 
         private void OnApplicationPause(bool pause)
@@ -111,6 +127,7 @@ namespace LarkXR {
 
         private void OnApplicationQuit()
         {
+            XRApi.ClearCallbacks();
             if (XRApi.IsConnected()) {
                 XRApi.Close();
             }

@@ -93,7 +93,7 @@ namespace LarkXR
         protected override void OnApiResponseSuccess(ApiResponse<GetAppliList.RawPageInfo> response)
         {
             base.OnApiResponseSuccess(response);
-            //Debug.Log("============ applist serrch result:" + response.code + "; list:" + response.result.Count);
+            // Debug.Log("============ applist serrch result:" + response.code + "; list:" + response.result);
             if (IsCodeSuccess(response.code))
             {
                 IsResultSuccess = true;
@@ -211,6 +211,29 @@ namespace LarkXR
             public long updateDate;
             public string updateUser;
             public string zipFile;
+
+            public override bool Equals(object obj)
+            {
+                return obj is StartAppInfo info &&
+                       appliId == info.appliId &&
+                       appliName == info.appliName &&
+                       appliType == info.appliType &&
+                       runCnt == info.runCnt &&
+                       startFlag == info.startFlag &&
+                       syncStatus == info.syncStatus;
+            }
+
+            public override int GetHashCode()
+            {
+                int hashCode = 2024296495;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(appliId);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(appliName);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(appliType);
+                hashCode = hashCode * -1521134295 + runCnt.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(startFlag);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(syncStatus);
+                return hashCode;
+            }
         }
     }
 }

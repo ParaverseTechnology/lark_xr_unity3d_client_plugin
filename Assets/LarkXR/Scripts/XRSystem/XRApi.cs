@@ -1,3 +1,4 @@
+using AOT;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,8 +7,17 @@ using UnityEngine;
 
 namespace LarkXR
 {
-    public class XRApi
+    public class XRApi : MonoBehaviour
     {
+        #region native events
+        // 连接成功
+        public delegate void OnConnected();
+        public delegate void OnClose(int code);
+        public delegate void OnInfo(int code, string msg);
+        public delegate void OnError(int code, string msg);
+        #endregion
+
+
         #region native structs.
         //
         // user config
@@ -520,10 +530,16 @@ namespace LarkXR
         public static void SetCertificate(string appKey, string appSecret)
         {
 #if UNITY_ANDROID || UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
-            larkxr_SetCertificate(appKey, appSecret); 
+            larkxr_SetCertificate(appKey, appSecret);
 #endif
         }
 
+        public static void EnableDebugMode(bool debug, string logfile) 
+        {
+#if UNITY_ANDROID || UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
+            larkxr_EnableDebugModePath(debug, logfile);
+#endif
+        }
 
         public static int GetLastError()
         {
@@ -873,6 +889,116 @@ namespace LarkXR
         }
         #endregion
 
+
+        #region callbacks
+        // 连接成功代理
+        public OnConnected onConnected;
+        // 通道关闭代理
+        public OnClose onClose;
+        // 文本消息代理
+        public OnInfo onInfo;
+        // 字节消息代理
+        public OnError onError;
+
+        private static XRApi instance = null;
+        // inner task
+        private delegate void GUITask();
+        private Queue<GUITask> TaskQueue = new Queue<GUITask>();
+        private readonly object _queueLock = new object();
+        XRApi()
+        {
+            Debug.Log("new xr api");
+            instance = this;
+        }
+        private void Start()
+        {
+
+        }
+        private void Update()
+        {
+            lock (_queueLock)
+            {
+                if (TaskQueue.Count > 0)
+                    TaskQueue.Dequeue()();
+            }
+        }
+
+        private void ScheduleTask(GUITask newTask)
+        {
+            lock (_queueLock)
+            {
+                TaskQueue.Enqueue(newTask);
+            }
+        }
+
+        public void RegisterCallbacks()
+        {
+            Debug.Log("RegisterCallbacks");
+            larkxr_SetCallbackOnConnected(c_lk_on_connected);
+            larkxr_SetCallbackOnClose(c_lk_on_close);
+            larkxr_SetCallbackOnInfo(c_lk_on_info);
+            larkxr_SetCallbackOnError(c_lk_on_error);
+        }
+
+        public void ClearCallbacks()
+        {
+            Debug.Log("ClearCallbacks");
+            larkxr_ClearCallback();
+        }
+        private delegate void lk_on_connected(IntPtr user_data);
+        private delegate void lk_on_close(int code, IntPtr user_data);
+        private delegate void lk_on_info(int info_code, string msg, IntPtr user_data);
+        private delegate void lk_on_error(int error_code, string msg, IntPtr user_data);
+
+        [MonoPInvokeCallback(typeof(lk_on_connected))]
+        public static void c_lk_on_connected(IntPtr user_data) {
+           // Debug.Log("c_lk_on_connected " + user_data);
+           instance?.ScheduleTask(new GUITask(delegate {
+                instance?.onConnected?.Invoke();
+           }));
+        }
+        [MonoPInvokeCallback(typeof(lk_on_close))]
+        public static void c_lk_on_close(int code, IntPtr user_data)
+        {
+            // Debug.Log("c_lk_on_close");
+            instance?.ScheduleTask(new GUITask(delegate {
+                instance?.onClose?.Invoke(code);
+            }));
+        }
+        [MonoPInvokeCallback(typeof(lk_on_info))]
+        public static void c_lk_on_info(int info_code, string msg, IntPtr user_data)
+        {
+            // Debug.Log("c_lk_on_info");
+            string msg_cpy = String.Copy(msg);
+            instance?.ScheduleTask(new GUITask(delegate {
+                instance?.onInfo?.Invoke(info_code, msg_cpy);
+            }));
+        }
+        [MonoPInvokeCallback(typeof(lk_on_error))]
+        public static void c_lk_on_error(int error_code, string msg, IntPtr user_data)
+        {
+            string msg_cpy = String.Copy(msg);
+            // Debug.Log("c_lk_on_error  " + error_code + " " + msg + " " + msg_cpy + " " + user_data);
+            instance?.ScheduleTask(new GUITask(delegate
+            {
+                instance?.onError?.Invoke(error_code, msg_cpy);
+            }));
+        }
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SetCallbackOnConnected(lk_on_connected on_connectded);
+
+        [DllImport("lark_xr")]
+        private static extern void larkxr_ClearCallback();
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SetCallbackOnClose(lk_on_close on_close);
+
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SetCallbackOnInfo(lk_on_info on_info);
+
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SetCallbackOnError(lk_on_error on_error);
+        #endregion
+
         #region IssuePluginEvent
         public static void IssuePluginEvent(int e = 1)
         {
@@ -893,6 +1019,9 @@ namespace LarkXR
         // 设置接入凭证 
         [DllImport("lark_xr")]
         private static extern void larkxr_SetCertificate(string sdkid, string secret);
+        // debug mode
+        [DllImport("lark_xr")]
+        private static extern void larkxr_EnableDebugModePath(bool is_debug, string log_file);
         // 获取错误码
         [DllImport("lark_xr")]
         private static extern int larkxr_GetLastError();

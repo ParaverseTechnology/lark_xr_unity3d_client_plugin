@@ -75,6 +75,14 @@ public class DemoRender : MonoBehaviour
             Debug.LogError("初始化云雀SDK ID 失败 code " + errCode);
         }
 
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
+        // 设置 log 文件
+        // XRApi.EnableDebugMode(true, System.Environment.CurrentDirectory + "/test.log");
+#elif UNITY_ANDROID
+        // 启用 android log
+        XRApi.EnableDebugMode(true, "");
+#endif
+
         // 设置客户端凭证。
         // 对应后台接入管理中设置的访问凭证
         // ApiBase<object>.SetCertificate("YourAppKey", "YourAppSecret");
