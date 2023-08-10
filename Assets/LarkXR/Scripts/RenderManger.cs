@@ -49,6 +49,18 @@ namespace LarkXR
 
         public bool IsStereoTexture { get; private set; }
 
+        public int WaitFrameTimeoutMilliSeconds = 33;
+
+        public bool UseRenderQueue {
+            set
+            {
+                XRApi.SetUseRenderQueue(value);
+                useRenderQueue = value;
+            }
+            get { return useRenderQueue; }
+        }
+        private bool useRenderQueue = false;
+
         // Start is called before the first frame update
         void Start()
         {
@@ -178,14 +190,40 @@ namespace LarkXR
             // render texture
             if (IsFrameInited)
             {
-                XRApi.TrackingFrame trackingFrame = XRApi.Render();
+                bool hasNewFrame = false;
+                hasNewFrame = XRApi.WaitFroNewFrame(WaitFrameTimeoutMilliSeconds);
+
+                if (!hasNewFrame)
+                {
+                    Debug.Log("wait timeout");
+                }
+
+
+                XRApi.TrackingFrame trackingFrame = new XRApi.TrackingFrame();
+                XRApi.HwRenderTexture hwRenderTexture = new XRApi.HwRenderTexture();
+
+                if (useRenderQueue)
+                {
+                    XRApi.RenderQueue(ref hwRenderTexture, ref trackingFrame);
+                }
+                else {
+                    trackingFrame = XRApi.Render();
+                }
+
+                // hasNewFrame = trackingFrame.avaliable;
+
+                if (!trackingFrame.avaliable)
+                {
+                    // Debug.Log("frame un avaliable ");
+                }
 
 #if UNITY_ANDROID || UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
                 if (IsStereoTexture)
                 {
                     textureLeft.UpdateExternalTexture(textureLeftId);
                     textureRight.UpdateExternalTexture(textureRightId);
-                } else
+                }
+                else
                 {
                     textureAll.UpdateExternalTexture(textureAllId);
                 }
@@ -193,9 +231,27 @@ namespace LarkXR
                 XRApi.IssuePluginEvent();
 #endif
 #endif
+                if (useRenderQueue) { 
+                    XRApi.RenderQueueRelease();
+                }
+
                 onTrackingFrame?.Invoke(trackingFrame);
-                // 提交统计数据
-                XRApi.CollectorrSubmit(trackingFrame);
+
+                if (hasNewFrame)
+                {
+                    // 提交统计数据
+                    XRApi.CollectorrSubmit(trackingFrame);
+                }
+            }
+            else {
+                if (useRenderQueue) {
+                    XRApi.TrackingFrame trackingFrame = new XRApi.TrackingFrame();
+                    XRApi.HwRenderTexture hwRenderTexture = new XRApi.HwRenderTexture();
+                    XRApi.RenderQueue(ref hwRenderTexture, ref trackingFrame);
+                    // init texture.
+                    UpdateTexture();
+                    XRApi.RenderQueueRelease();
+                }
             }
         }
     }

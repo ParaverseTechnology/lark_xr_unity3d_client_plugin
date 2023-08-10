@@ -53,6 +53,8 @@ namespace LarkXR {
             private set;
         } = false;
 
+        public bool AutoStartTask = false;
+
         //public VrApplication VrApplication { get; private set; }
 
         private void Awake()
@@ -110,7 +112,9 @@ namespace LarkXR {
         // Start is called before the first frame update
         void Start()
         {
-            TaskManager.StartTask();
+            if (AutoStartTask) { 
+                TaskManager.StartTask();
+            }
             // RegisterCallbacks after native inited.
             this.XRApi.RegisterCallbacks();
         }

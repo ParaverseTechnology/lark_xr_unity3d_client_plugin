@@ -97,11 +97,20 @@ public class DemoRender : MonoBehaviour
         XRManager.Instance.RenderManger.onTexture2DStereo += OnTexture2DStrereo;
         XRManager.Instance.RenderManger.onTexture2D += OnTexture2D;
 
+        // auto start task
+        XRManager.Instance.AutoStartTask = true;
+        // XRManager.Instance.AutoStartTask = false;
+
+        // test use render queue mode.
+        XRManager.Instance.RenderManger.UseRenderQueue = true;
+        // XRManager.Instance.RenderManger.UseRenderQueue = false;
+
         // config render.
         XRApi.RenderInfo renderInfo = XRApi.GetDefaultRenderInfo();
         renderInfo.renderWidth = 1920;
         renderInfo.renderHeight = 1080;
         renderInfo.fps = 60;
+        
         // renderInfo.ipd = 0;
         XRApi.SetRenderInfo(renderInfo);
         XRApi.SetupBitrateKbps(50 * 1000);
@@ -138,6 +147,7 @@ public class DemoRender : MonoBehaviour
         buttonClose.gameObject.SetActive(false);
         buttonClose.onClick.AddListener(Close);
 
+        // XRApi.SendText("your data");
     }
 
     /*    private void OnGUI()

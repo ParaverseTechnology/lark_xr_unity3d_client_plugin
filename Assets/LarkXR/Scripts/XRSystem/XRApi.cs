@@ -490,7 +490,10 @@ namespace LarkXR
         }
         #endregion
         #region client context api.
-        private static UInt64 frameIndex = 0;
+        public static UInt64 frameIndex {
+            get;
+            private set;
+        }
 
         #region win32 插件自动初始化
         public static void InitContext()
@@ -634,9 +637,28 @@ namespace LarkXR
             TrackingFrame trackingFrame = new TrackingFrame();
             bool result = larkxr_Render2(ref trackingFrame.frameIndex, ref trackingFrame.fetchTime, ref trackingFrame.displayTime,
                 ref trackingFrame.tracking.position.x, ref trackingFrame.tracking.position.y, ref trackingFrame.tracking.position.z,
-                ref trackingFrame.tracking.rotation.x, ref trackingFrame.tracking.rotation.y, ref trackingFrame.tracking.rotation.y, ref trackingFrame.tracking.rotation.w);
+                ref trackingFrame.tracking.rotation.x, ref trackingFrame.tracking.rotation.y, ref trackingFrame.tracking.rotation.z, ref trackingFrame.tracking.rotation.w);
             trackingFrame.avaliable = result;
             return trackingFrame;
+        }
+
+        public static bool WaitFroNewFrame(int timeoutMilliSeconds)
+        {
+            return larkxr_WaitFroNewFrame(timeoutMilliSeconds);
+        }
+
+        public static bool RenderQueue(ref HwRenderTexture hwTexture, ref TrackingFrame trackingFrame)
+        {
+            bool result = larkxr_RenderQueue(ref hwTexture, ref trackingFrame.frameIndex, ref trackingFrame.fetchTime, ref trackingFrame.displayTime,
+                ref trackingFrame.tracking.position.x, ref trackingFrame.tracking.position.y, ref trackingFrame.tracking.position.z,
+                ref trackingFrame.tracking.rotation.x, ref trackingFrame.tracking.rotation.y, ref trackingFrame.tracking.rotation.z, ref trackingFrame.tracking.rotation.w);
+            trackingFrame.avaliable = result;
+            return result;
+        }
+
+        public static void RenderQueueRelease()
+        {
+            larkxr_RenderQueueRelease();
         }
 
         // 在最终渲染时调用，用于收集延时信息。
@@ -671,10 +693,11 @@ namespace LarkXR
                 inputState.appMenuPressed, inputState.homePressed, inputState.gripPressed, inputState.volumUpPressed, inputState.volumDownPressed, inputState.touchPadTouched);
         }
         // send deivce pari to cloud.
-        public static void SendDeivcePair()
+        public static UInt64 SendDeivcePair()
         {
             XRApi.frameIndex++;
             larkxr_SendDevicePair(XRApi.frameIndex, 0, 0);
+            return XRApi.frameIndex;
         }
         // send deivce pari to cloud.
         public static void SendDeivcePair(UInt64 frameIndex, UInt64 fetchTime = 0, double displayTime = 0)
@@ -889,6 +912,13 @@ namespace LarkXR
         }
         #endregion
 
+        #region render config
+        public static void SetUseRenderQueue(bool useRenderQueue)
+        {
+            larkxr_SetUseRenderQueue(useRenderQueue);
+        }
+        #endregion
+
 
         #region callbacks
         // 连接成功代理
@@ -1073,6 +1103,17 @@ namespace LarkXR
         private static extern bool larkxr_Render2(ref UInt64 frameIndex, ref UInt64 fetchTime, ref double displayTime,
             ref float px, ref float py, ref float pz, 
             ref float rx, ref float ry, ref float rz, ref float rw);
+
+        [DllImport("lark_xr")]
+        private static extern bool larkxr_WaitFroNewFrame(int timeoutMilliSeconds);
+
+        [DllImport("lark_xr")]
+        private static extern bool larkxr_RenderQueue(ref HwRenderTexture hwTexture, ref UInt64 frameIndex, ref UInt64 fetchTime, ref double displayTime,
+            ref float px, ref float py, ref float pz,
+            ref float rx, ref float ry, ref float rz, ref float rw);
+
+        [DllImport("lark_xr")]
+        private static extern void larkxr_RenderQueueRelease();
 
         // 在最终渲染时调用，用于收集延时信息。
         [DllImport("lark_xr")]
@@ -1305,6 +1346,11 @@ namespace LarkXR
         #region render callback
         [DllImport("lark_xr")]
         private static extern IntPtr GetRenderEventFunc();
+        #endregion
+
+        #region render setup
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SetUseRenderQueue(bool useRenderQueue);
         #endregion
     }
 }
