@@ -61,6 +61,11 @@ namespace LarkXR
         }
         private bool useRenderQueue = false;
 
+        public void SetRenderQueueSize(int size)
+        {
+            XRApi.SetRenderQueueSize(size);
+        }
+
         // Start is called before the first frame update
         void Start()
         {

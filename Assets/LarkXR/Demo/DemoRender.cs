@@ -104,6 +104,8 @@ public class DemoRender : MonoBehaviour
         // test use render queue mode.
         XRManager.Instance.RenderManger.UseRenderQueue = true;
         // XRManager.Instance.RenderManger.UseRenderQueue = false;
+        // set render queue size;
+        XRManager.Instance.RenderManger.SetRenderQueueSize(2);
 
         // config render.
         XRApi.RenderInfo renderInfo = XRApi.GetDefaultRenderInfo();

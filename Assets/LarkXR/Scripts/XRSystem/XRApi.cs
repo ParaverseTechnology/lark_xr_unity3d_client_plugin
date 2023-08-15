@@ -917,6 +917,10 @@ namespace LarkXR
         {
             larkxr_SetUseRenderQueue(useRenderQueue);
         }
+        public static void SetRenderQueueSize(int renderQueueSize)
+        {
+            larkxr_SetRenderQueueSize(renderQueueSize);
+        }
         #endregion
 
 
@@ -1351,6 +1355,9 @@ namespace LarkXR
         #region render setup
         [DllImport("lark_xr")]
         private static extern void larkxr_SetUseRenderQueue(bool useRenderQueue);
+
+        [DllImport("lark_xr")]
+        private static extern void larkxr_SetRenderQueueSize(int renderQueueSize);
         #endregion
     }
 }
