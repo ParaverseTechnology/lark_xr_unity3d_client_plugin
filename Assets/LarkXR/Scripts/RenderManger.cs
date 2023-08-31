@@ -209,7 +209,27 @@ namespace LarkXR
 
                 if (useRenderQueue)
                 {
-                    XRApi.RenderQueue(ref hwRenderTexture, ref trackingFrame);
+                    if (XRApi.RenderQueue(ref hwRenderTexture, ref trackingFrame))
+                    {
+                        if (hwRenderTexture.type == XRApi.HwRenderTextureType.larkxrHwRenderTextureType_D3D11_Multiview ||
+                            hwRenderTexture.type == XRApi.HwRenderTextureType.larkxrHwRenderTextureType_Android_Multiview)
+                        {
+                            if (hwRenderTexture.textureSlot1 != System.IntPtr.Zero)
+                            {
+                                textureAllId = hwRenderTexture.textureSlot1;
+                            }
+                        }
+                        else if (hwRenderTexture.type == XRApi.HwRenderTextureType.larkxrHwRenderTextureType_D3D11_Stereo ||
+                                hwRenderTexture.type == XRApi.HwRenderTextureType.larkxrHwRenderTextureType_Android_Stereo)
+                        {
+                            if (hwRenderTexture.textureSlot1 != System.IntPtr.Zero &&
+                                hwRenderTexture.textureSlot2 != System.IntPtr.Zero)
+                            {
+                                textureLeftId = hwRenderTexture.textureSlot1;
+                                textureRightId = hwRenderTexture.textureSlot2;
+                            }
+                        }
+                    }
                 }
                 else {
                     trackingFrame = XRApi.Render();
@@ -232,6 +252,9 @@ namespace LarkXR
                 {
                     textureAll.UpdateExternalTexture(textureAllId);
                 }
+
+                // Debug.Log("update texture " + textureLeftId + " " + textureRightId + " " + textureAllId + " " + trackingFrame.frameIndex);
+
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
                 XRApi.IssuePluginEvent();
 #endif

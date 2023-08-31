@@ -115,7 +115,11 @@ public class DemoRender : MonoBehaviour
         
         // renderInfo.ipd = 0;
         XRApi.SetRenderInfo(renderInfo);
-        XRApi.SetupBitrateKbps(50 * 1000);
+
+        // XRApi.SetupBitrateKbps(20 * 1000);
+        // XRApi.SetStreamType(XRApi.StreamType.larkStreamType_UDP);
+        XRApi.SetStreamType(XRApi.StreamType.larkStreamType_KCP);
+        // XRApi.SetResolutionScale(0.5f);
 
         // 设置头盔类型为，主要会影响云端手柄的默认展示
         var headSetControllerDesc = XRApi.GetDefaultHeadSetControllerDesc();
@@ -136,7 +140,7 @@ public class DemoRender : MonoBehaviour
         XRApi.QuickConfigLevel level = XRApi.QuickConfigLevel.QuickConfigLevel_Manual;
         XRApi.QuickConfigWithDefaulSetup(level);
         Config.SetQuickSetupLevel((int)level);
-        XRApi.SetStreamType(XRApi.StreamType.larkStreamType_TCP);
+        // XRApi.SetStreamType(XRApi.StreamType.larkStreamType_TCP);
 
         // test frame rate.
         Application.targetFrameRate = 60;
