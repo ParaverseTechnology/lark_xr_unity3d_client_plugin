@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using UnityEngine;
 
 
@@ -38,20 +40,21 @@ namespace LarkXR
         private Texture2D textureRight { get; set; }
         private Texture2D textureAll { get; set; }
 
-        private System.IntPtr textureLeftId = System.IntPtr.Zero;
-        private System.IntPtr textureRightId = System.IntPtr.Zero;
-        private System.IntPtr textureAllId = System.IntPtr.Zero;
+        public System.IntPtr textureLeftId { get; private set; } = System.IntPtr.Zero;
+        public System.IntPtr textureRightId { get; private set; } = System.IntPtr.Zero;
+        public System.IntPtr textureAllId { get; private set; } = System.IntPtr.Zero;
 
         // public texture change to Texture2D
         public Texture2D RTextureLeft { get { return textureLeft; } }
-        public Texture2D RTextureRight { get { return textureRight;  } }
-        public Texture2D RTextureAll { get { return textureAll;  } }
+        public Texture2D RTextureRight { get { return textureRight; } }
+        public Texture2D RTextureAll { get { return textureAll; } }
 
         public bool IsStereoTexture { get; private set; }
 
         public int WaitFrameTimeoutMilliSeconds = 33;
 
-        public bool UseRenderQueue {
+        public bool UseRenderQueue
+        {
             set
             {
                 XRApi.SetUseRenderQueue(value);
@@ -66,6 +69,51 @@ namespace LarkXR
             XRApi.SetRenderQueueSize(size);
         }
 
+        public XRApi.TrackingFrame CurrentTrackingFrame
+        {
+            get; private set;
+        } = new XRApi.TrackingFrame();
+
+        public bool AutoReleaseRenderQueue = false;
+
+        public struct TrackingPose
+        {
+            public ulong sensorFrameIndex;
+            public Quaternion quaternion;
+            public Vector3 position;
+        }
+
+        public static OrderedDictionary TrackingMap = new OrderedDictionary();
+
+
+        public bool CatcheTextures = false;
+
+        public Texture2D CatcheLastTextureLeft
+        {
+            get; private set;
+        } = null;
+
+        private RenderTexture CatcheLastRenderTextureLeft = null;
+
+        public Texture2D CatcheLastTextureRight
+        {
+            get; private set;
+        } = null;
+
+        private RenderTexture CatcheLastRenderTextureRight = null;
+
+        public Texture2D CatcheLastTextureAll
+        {
+            get; private set;
+        } = null;
+
+        private RenderTexture CatcheLastRenderTextureAll = null;
+
+        public XRApi.TrackingFrame CatcheLastTrackingFrame
+        {
+            get; private set;
+        } = new XRApi.TrackingFrame();
+
         // Start is called before the first frame update
         void Start()
         {
@@ -78,6 +126,7 @@ namespace LarkXR
             {
                 if (!Connected)
                 {
+                    StartCoroutine(FrameEnd());
                     Connected = true;
                     onConnected?.Invoke();
                     Debug.Log("Connnected");
@@ -91,6 +140,10 @@ namespace LarkXR
             {
                 if (Connected)
                 {
+                    StopCoroutine(FrameEnd());
+
+                    CurrentTrackingFrame = new XRApi.TrackingFrame();
+
                     // disconnected
                     Connected = false;
                     IsFrameInited = false;
@@ -102,6 +155,14 @@ namespace LarkXR
                     textureLeft = null;
                     textureRight = null;
                     textureAll = null;
+
+                    CatcheLastTextureLeft = null;
+                    CatcheLastTextureRight = null;
+                    CatcheLastTextureAll = null;
+
+                    CatcheLastRenderTextureLeft = null;
+                    CatcheLastRenderTextureRight = null;
+                    CatcheLastRenderTextureAll = null;
 
                     onClose?.Invoke();
                     Debug.Log("Disconected");
@@ -120,7 +181,7 @@ namespace LarkXR
                 int width = hwTexture.width;
                 int height = hwTexture.height;
 
-                if (hwTexture.type == XRApi.HwRenderTextureType.larkxrHwRenderTextureType_D3D11_Multiview || 
+                if (hwTexture.type == XRApi.HwRenderTextureType.larkxrHwRenderTextureType_D3D11_Multiview ||
                     hwTexture.type == XRApi.HwRenderTextureType.larkxrHwRenderTextureType_Android_Multiview)
                 {
                     if (hwTexture.textureSlot1 == System.IntPtr.Zero)
@@ -231,7 +292,8 @@ namespace LarkXR
                         }
                     }
                 }
-                else {
+                else
+                {
                     trackingFrame = XRApi.Render();
                 }
 
@@ -241,6 +303,10 @@ namespace LarkXR
                 {
                     // Debug.Log("frame un avaliable ");
                 }
+
+                CurrentTrackingFrame = trackingFrame;
+
+                // Debug.Log("CloudPose update=" + trackingFrame.avaliable + "; frameIndex=" + trackingFrame.frameIndex);
 
 #if UNITY_ANDROID || UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
                 if (IsStereoTexture)
@@ -259,7 +325,9 @@ namespace LarkXR
                 XRApi.IssuePluginEvent();
 #endif
 #endif
-                if (useRenderQueue) { 
+
+                if (UseRenderQueue)
+                {
                     XRApi.RenderQueueRelease();
                 }
 
@@ -270,9 +338,12 @@ namespace LarkXR
                     // 提交统计数据
                     XRApi.CollectorrSubmit(trackingFrame);
                 }
+                // Debug.Log("Update");
             }
-            else {
-                if (useRenderQueue) {
+            else
+            {
+                if (useRenderQueue)
+                {
                     XRApi.TrackingFrame trackingFrame = new XRApi.TrackingFrame();
                     XRApi.HwRenderTexture hwRenderTexture = new XRApi.HwRenderTexture();
                     XRApi.RenderQueue(ref hwRenderTexture, ref trackingFrame);
@@ -281,6 +352,105 @@ namespace LarkXR
                     XRApi.RenderQueueRelease();
                 }
             }
+        }
+
+        public void RenderQueueRelease()
+        {
+            XRApi.RenderQueueRelease();
+        }
+
+        private IEnumerator FrameEnd()
+        {
+            while (true)
+            {
+                yield return new WaitForEndOfFrame();
+
+                if (AutoReleaseRenderQueue)
+                {
+                    if (IsFrameInited && UseRenderQueue && CurrentTrackingFrame.avaliable)
+                    {
+                        // Debug.Log("FrameEnd");
+                        XRApi.RenderQueueRelease();
+                    }
+                }
+
+                if (IsFrameInited && CurrentTrackingFrame.avaliable && CatcheTextures)
+                {
+                    CatcheLastTrackingFrame = CurrentTrackingFrame;
+
+                    if (IsStereoTexture)
+                    {
+                        if (CatcheLastRenderTextureLeft = null)
+                        {
+                            CatcheLastRenderTextureLeft = new RenderTexture(textureLeft.width, textureLeft.height, 24);
+                        }
+
+                        if (CatcheLastRenderTextureRight = null)
+                        {
+                            CatcheLastRenderTextureRight = new RenderTexture(CatcheLastRenderTextureRight.width, CatcheLastRenderTextureRight.height, 24);
+                        }
+
+                        if (CatcheLastTextureLeft == null)
+                        {
+                            CatcheLastTextureLeft = new Texture2D(CatcheLastTextureLeft.width, CatcheLastTextureLeft.height);
+                        }
+
+                        if (CatcheLastTextureRight == null)
+                        {
+                            CatcheLastTextureRight = new Texture2D(CatcheLastTextureRight.width, CatcheLastTextureRight.height);
+                        }
+
+                        // Remember currently active render texture
+                        RenderTexture currentActiveRT = RenderTexture.active;
+
+                        Graphics.Blit(XRManager.Instance.RenderManger.RTextureLeft, CatcheLastRenderTextureLeft);
+
+                        // Set the supplied RenderTexture as the active one
+                        RenderTexture.active = CatcheLastRenderTextureLeft;
+
+                        CatcheLastTextureLeft.ReadPixels(new Rect(0, 0, CatcheLastTextureLeft.width, CatcheLastTextureLeft.height), 0, 0);
+                        CatcheLastTextureLeft.Apply();
+
+                        Graphics.Blit(XRManager.Instance.RenderManger.RTextureRight, CatcheLastRenderTextureRight);
+
+                        // Set the supplied RenderTexture as the active one
+                        RenderTexture.active = CatcheLastRenderTextureRight;
+
+                        CatcheLastTextureRight.ReadPixels(new Rect(0, 0, CatcheLastTextureRight.width, CatcheLastTextureRight.height), 0, 0);
+                        CatcheLastTextureRight.Apply();
+
+                        // Restore previously active render texture
+                        RenderTexture.active = currentActiveRT;
+                    }
+                    else
+                    {
+                        if (CatcheLastRenderTextureAll = null)
+                        {
+                            CatcheLastRenderTextureAll = new RenderTexture(textureAll.width, textureAll.height, 24);
+                        }
+
+                        if (CatcheLastTextureAll == null)
+                        {
+                            CatcheLastTextureAll = new Texture2D(textureAll.width, textureAll.height);
+                        }
+
+                        // Remember currently active render texture
+                        RenderTexture currentActiveRT = RenderTexture.active;
+
+                        Graphics.Blit(XRManager.Instance.RenderManger.RTextureRight, CatcheLastRenderTextureAll);
+
+                        // Set the supplied RenderTexture as the active one
+                        RenderTexture.active = CatcheLastRenderTextureAll;
+
+                        CatcheLastTextureAll.ReadPixels(new Rect(0, 0, CatcheLastTextureAll.width, CatcheLastTextureAll.height), 0, 0);
+                        CatcheLastTextureAll.Apply();
+
+                        // Restore previously active render texture
+                        RenderTexture.active = currentActiveRT;
+                    }
+                }
+            }
+            yield return null;
         }
     }
 }

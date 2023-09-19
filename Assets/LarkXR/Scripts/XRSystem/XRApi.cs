@@ -702,7 +702,7 @@ namespace LarkXR
         // send deivce pari to cloud.
         public static void SendDeivcePair(UInt64 frameIndex, UInt64 fetchTime = 0, double displayTime = 0)
         {
-            larkxr_SendDevicePair(frameIndex, 0, 0);
+            larkxr_SendDevicePair(frameIndex, fetchTime, displayTime);
         }
         public static void SetServerAddr(string ip, int port)
         {

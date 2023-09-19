@@ -1,8 +1,13 @@
+// #define TEST_SAVE_TO_PNG
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using LarkXR;
+using System.Linq;
+using System.IO;
+
 public class DemoRender : MonoBehaviour
 {
     public float sensitivityMouse = 2f;
@@ -97,6 +102,10 @@ public class DemoRender : MonoBehaviour
         XRManager.Instance.RenderManger.onTexture2DStereo += OnTexture2DStrereo;
         XRManager.Instance.RenderManger.onTexture2D += OnTexture2D;
 
+#if TEST_SAVE_TO_PNG
+        XRManager.Instance.RenderManger.onTrackingFrame += OnTrackingFrame;
+#endif
+
         // auto start task
         XRManager.Instance.AutoStartTask = true;
         // XRManager.Instance.AutoStartTask = false;
@@ -116,10 +125,11 @@ public class DemoRender : MonoBehaviour
         // renderInfo.ipd = 0;
         XRApi.SetRenderInfo(renderInfo);
 
-        // XRApi.SetupBitrateKbps(20 * 1000);
+
+        XRApi.SetupBitrateKbps(20 * 1000);
         // XRApi.SetStreamType(XRApi.StreamType.larkStreamType_UDP);
         XRApi.SetStreamType(XRApi.StreamType.larkStreamType_KCP);
-        // XRApi.SetResolutionScale(0.5f);
+        // XRApi.SetResolutionScale(0.25f);
 
         // 设置头盔类型为，主要会影响云端手柄的默认展示
         var headSetControllerDesc = XRApi.GetDefaultHeadSetControllerDesc();
@@ -154,6 +164,11 @@ public class DemoRender : MonoBehaviour
         buttonClose.onClick.AddListener(Close);
 
         // XRApi.SendText("your data");
+
+
+#if TEST_SAVE_TO_PNG
+        Camera.onPostRender = OnCameraPostRender;
+#endif
     }
 
     /*    private void OnGUI()
@@ -224,7 +239,7 @@ public class DemoRender : MonoBehaviour
             hmd.transform.Translate(0, Input.GetAxis("UpDown") * sensitivetyKeyBoard, 0);
         }*/
     }
-    #region cloud
+#region cloud
     private void UpdateCloudPose()
     {
         if (hmd == null)
@@ -429,6 +444,11 @@ public class DemoRender : MonoBehaviour
 
         // send deivce pair info to server.
         XRApi.SendDeivcePair();
+/*        Debug.Log("send device pair frameIndex=" + XRApi.frameIndex + 
+            ";rx=" + openVrPose.Rotation.x + 
+            ";ry=" + openVrPose.Rotation.y + 
+            ";rz=" + openVrPose.Rotation.z + 
+            ";rw=" + openVrPose.Rotation.w);*/
     }
     private void OnTexture2D(Texture2D texture)
     {
@@ -470,7 +490,126 @@ public class DemoRender : MonoBehaviour
         renderRight.texture = textureRight;
         // new Rect(0.5f, 0, 0.5f, 1);
         // render.uvRect = new Rect(0, 0, 0.5f, 1);
+
+#if TEST_SAVE_TO_PNG
+        testRenderTexture = new RenderTexture(textureLeft.width, textureLeft.height, 24);
+        testRenderTextureLeft = new RenderTexture(textureLeft.width, textureLeft.height, 24);
+        testTexture2D = new Texture2D(textureLeft.width, textureLeft.height);
+        testTexture2DLeft = new Texture2D(textureLeft.width, textureLeft.height);
+
+        // renderLeft.texture = testTexture2DLeft;
+        // renderRight.texture = testTexture2D;
+        // Camera.main.targetTexture = null;
+#endif
     }
+
+#if TEST_SAVE_TO_PNG
+    private byte[] lastPng;
+    private XRApi.TrackingFrame lastTrackingFrame;
+    private RenderTexture testRenderTexture;
+    private RenderTexture testRenderTextureLeft;
+    private Texture2D testTexture2D;
+    private Texture2D testTexture2DLeft;
+    private bool updateFrame = false;
+    private XRApi.TrackingFrame updateTrackingFrame;
+    private void OnTrackingFrame(XRApi.TrackingFrame trackingFrame)
+    {
+#if false
+        byte[] png = XRManager.Instance.RenderManger.RTextureLeft.GetRawTextureData();
+
+        // XRManager.Instance.RenderManger.RTextureRight.EncodeToPNG();
+
+        if (lastPng != null) {
+            bool imageEqual = Enumerable.SequenceEqual(png, lastPng);
+
+            bool rotateEqual = trackingFrame.tracking.rotation.Equals(lastTrackingFrame.tracking.rotation);
+
+            Debug.Log("imageEqual=" + imageEqual + ";rotateEqual=" + rotateEqual + 
+                ";id=" + trackingFrame.frameIndex + ";lastID=" + lastTrackingFrame.frameIndex);
+        }
+
+        lastPng = png;
+        lastTrackingFrame = trackingFrame;
+#endif
+        updateFrame = true;
+        updateTrackingFrame = trackingFrame;
+
+        // Camera.main.targetTexture = null;
+        // Graphics.Blit(XRManager.Instance.RenderManger.RTextureRight, (RenderTexture)null);
+        // TestPixelsAndPose(updateTrackingFrame);
+    }
+
+    private void TestPixelsAndPose(XRApi.TrackingFrame trackingFrame)
+    {
+        // Remember currently active render texture
+        RenderTexture currentActiveRT = RenderTexture.active;
+
+        Graphics.Blit(XRManager.Instance.RenderManger.RTextureRight, testRenderTexture);
+
+        // Set the supplied RenderTexture as the active one
+        RenderTexture.active = testRenderTexture;
+
+        testTexture2D.ReadPixels(new Rect(0, 0, testTexture2D.width, testTexture2D.height), 0, 0);
+        testTexture2D.Apply();
+
+
+        Graphics.Blit(XRManager.Instance.RenderManger.RTextureLeft, testRenderTextureLeft);
+
+        // Set the supplied RenderTexture as the active one
+        RenderTexture.active = testRenderTextureLeft;
+
+        testTexture2DLeft.ReadPixels(new Rect(0, 0, testTexture2DLeft.width, testTexture2DLeft.height), 0, 0);
+        testTexture2DLeft.Apply();
+
+        // Restore previously active render texture
+        RenderTexture.active = currentActiveRT;
+
+
+        // byte[] png = null;
+        byte[] png = testTexture2D.EncodeToJPG(100);
+
+        if (lastPng != null)
+        {
+            bool imageEqual = Enumerable.SequenceEqual(png, lastPng);
+
+            bool rotateEqual = trackingFrame.tracking.rotation.Equals(lastTrackingFrame.tracking.rotation);
+
+            //Debug.Log("imageEqual=" + imageEqual + ";rotateEqual=" + rotateEqual +
+            //    ";id=" + trackingFrame.frameIndex + ";lastID=" + lastTrackingFrame.frameIndex + ";img size=" + png.Length + ";last size=" + lastPng.Length);
+
+            // Debug.Log("rotation x=" + trackingFrame.tracking.rotation.x + ";y=" + trackingFrame.tracking.rotation.y + ";z=" + trackingFrame.tracking.rotation.z + ";w=" + trackingFrame.tracking.rotation.w);
+            // Debug.Log("rotation x=" + lastTrackingFrame.tracking.rotation.x + ";y=" + lastTrackingFrame.tracking.rotation.y + ";z=" + lastTrackingFrame.tracking.rotation.z + ";w=" + trackingFrame.tracking.rotation.w);
+
+            if (imageEqual && !rotateEqual) {
+                Debug.Log("imageEqual=" + imageEqual + ";rotateEqual=" + rotateEqual +
+                ";id=" + trackingFrame.frameIndex + ";lastID=" + lastTrackingFrame.frameIndex + ";img size=" + png.Length + ";last size=" + lastPng.Length);
+                // File.WriteAllBytes(System.Environment.CurrentDirectory + "/testImg/SavedScreen_img_" + imageEqual + "_" + trackingFrame.frameIndex + "_" + lastTrackingFrame.frameIndex + "_1.jpg", png);
+                // File.WriteAllBytes(System.Environment.CurrentDirectory + "/testImg/SavedScreen_img_" + imageEqual + "_" + trackingFrame.frameIndex + "_" + lastTrackingFrame.frameIndex + "_2.jpg", lastPng);
+            }
+            if (!imageEqual && rotateEqual) {
+                Debug.Log("imageEqual=" + imageEqual + ";rotateEqual=" + rotateEqual +
+                    ";id=" + trackingFrame.frameIndex + ";lastID=" + lastTrackingFrame.frameIndex + ";img size=" + png.Length + ";last size=" + lastPng.Length);
+                // File.WriteAllBytes(System.Environment.CurrentDirectory + "/testImg/SavedScreen_img_" + imageEqual + "_" + trackingFrame.frameIndex + "_" + lastTrackingFrame.frameIndex + "_1.jpg", png);
+                // File.WriteAllBytes(System.Environment.CurrentDirectory + "/testImg/SavedScreen_img_" + imageEqual + "_" + trackingFrame.frameIndex + "_" + lastTrackingFrame.frameIndex + "_2.jpg", lastPng);
+            }
+        }
+
+        lastPng = png;
+        lastTrackingFrame = trackingFrame;
+    }
+
+    private void OnCameraPostRender(Camera camera)
+    {
+        if (updateFrame)
+        {
+            TestPixelsAndPose(updateTrackingFrame);
+        }
+
+        updateFrame = false;
+    }
+#endif
+
+
 
     private void OnClose()
     {
@@ -492,7 +631,7 @@ public class DemoRender : MonoBehaviour
         buttonClose.gameObject.SetActive(true);
         debugUIGroup.SetActive(true);
     }
-    #endregion
+#endregion
     public void Close()
     {
         XRManager.Instance.OnClose();
