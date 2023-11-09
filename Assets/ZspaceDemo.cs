@@ -11,6 +11,8 @@ using System.Runtime.InteropServices;
 using UnityEditor;
 using zSpace.Core.Extensions;
 using zSpace.Core.Input;
+using System.Text.RegularExpressions;
+using System.Linq;
 
 public class ZspaceDemo : MonoBehaviour
 {
@@ -38,7 +40,7 @@ public class ZspaceDemo : MonoBehaviour
         closeButton.gameObject.SetActive(false);
 
         // 初始化 SDK ID 
-        string sdkID = "Your SDK ID";
+        string sdkID = "your sdk id";
 
         if (!XRApi.InitSdkAuthorization(sdkID))
         {
@@ -56,7 +58,13 @@ public class ZspaceDemo : MonoBehaviour
 
         // 从本地文件中读取客户端访问凭证。
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || PLATFORM_STANDALONE_WIN
-        XRManager.Instance.LoadCertificateFromFile();
+        try { 
+            XRManager.Instance.LoadCertificateFromFile();
+        }
+        catch (Exception e)
+        {
+            Debug.Log("load certificate file failed." + e.Message);
+        }
 #endif
 
         // 设置头盔类型
@@ -68,6 +76,9 @@ public class ZspaceDemo : MonoBehaviour
         XRManager.Instance.RenderManger.onConnected += OnConnect;
         XRManager.Instance.RenderManger.onTexture2DStereo += OnRenderTextureStereo;
         XRManager.Instance.RenderManger.onTexture2D += OnTexture2D;
+
+        XRManager.Instance.AutoStartTask = true;
+        XRManager.Instance.TaskManager.StartTask();
 
         /*        ZDisplay display = ZProvider.Context.DisplayManager.GetDisplay(ZDisplayType.zSpace);
 
@@ -91,6 +102,60 @@ public class ZspaceDemo : MonoBehaviour
 
         stylus = GameObject.FindObjectOfType<ZStylus>();
         Debug.Assert(stylus != null);
+
+        string[] args = Environment.GetCommandLineArgs();
+        Debug.Log("GetCommandLineArgs " + String.Join(" ", args));
+        if (args.Length > 1) {
+            // try parse url.
+            string startUrl = args[1];
+            Debug.Log("start url " + startUrl);
+            UriBuilder uriBuilder = new UriBuilder(startUrl);
+            Debug.Log("uriBuilder " + uriBuilder.ToString());
+            if (uriBuilder.Query != null && uriBuilder.Query != "") {
+
+                string query = uriBuilder.Query;
+                query = query.Trim();
+                query = query.Replace("?", "");
+
+                var queryValues = query.Split('&').Select(q => q.Split('='))
+                   .ToDictionary(k => k[0], v => v[1]);
+                Debug.Log("uriBuilder query=" + query);
+
+                foreach (KeyValuePair<string, string> kvp in queryValues)
+                {
+                    Console.WriteLine("key {0} val {1}", kvp.Key, kvp.Value);
+                }
+
+                if (queryValues.ContainsKey("ip") && queryValues["ip"] != "") {
+                    Debug.Log("find server ip " + queryValues["ip"]);
+                    Config.SetServerIp(queryValues["ip"]);
+                    XRApi.SetServerAddr(Config.GetServerIp(), Config.GetLarkPort());
+                }
+                if (queryValues.ContainsKey("port") && queryValues["port"] != "")
+                {
+                    Debug.Log("find server port " + queryValues["port"]);
+                    Config.SetCloudLarkPort(System.Int32.Parse(queryValues["port"]));
+                    XRApi.SetServerAddr(Config.GetServerIp(), Config.GetLarkPort());
+                }
+                if (queryValues.ContainsKey("appId") && queryValues["appId"] != "")
+                {
+                    Debug.Log("find server appId " + queryValues["appId"]);
+                    XRManager.Instance.OnEnterAppli(queryValues["appId"]);
+                }
+
+                string appKey = "";
+                string appSecret = "";
+                if (queryValues.ContainsKey("appKey") && queryValues["appKey"] != "") {
+                    appKey = queryValues["appKey"];
+                }
+                if (queryValues.ContainsKey("appSecret") && queryValues["appSecret"] != "") {
+                    appSecret = queryValues["appSecret"];
+                }
+                if (appKey != "") { 
+                    ApiBase<object>.SetCertificate(appKey, appSecret);
+                }
+            }
+        }
     }
 
     // Update is called once per frame
